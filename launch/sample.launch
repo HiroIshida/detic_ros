@@ -1,0 +1,7 @@
+<launch>
+  <node name="detic_node"
+        pkg="detic_ros" type="node.py"
+        output="screen" >
+    <remap from="~input_image" to="/kinect_head/rgb/image_color"/>
+  </node>
+</launch>
