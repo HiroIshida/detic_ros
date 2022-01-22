@@ -5,6 +5,7 @@ import os
 import sys
 import time
 import torch
+from typing import Optional
 from detectron2.config import get_cfg
 
 import rospy
@@ -21,35 +22,52 @@ from detic.config import add_detic_config
 from detic.predictor import VisualizationDemo
 
 
-def cfg_from_rosparam():
-    rospack = rospkg.RosPack()
-    pack_path = rospack.get_path('detic_ros')
-    default_detic_config_path = os.path.join(
-        pack_path, 'detic_configs', 
-        'Detic_LCOCOI21k_CLIP_SwinB_896b32_4x_ft4x_max-size.yaml')
+@dataclasses.dataclass
+class NodeConfig:
+    out_debug_img: bool
+    out_debug_segimage: bool
+    voabulary: str
+    detic_config_path: str
+    model_weights_path: str
+    confidence_threshold: float
 
-    default_model_weights_path = os.path.join(
-        pack_path, 'models',
-        'Detic_LCOCOI21k_CLIP_SwinB_896b32_4x_ft4x_max-size.pth')
+    @classmethod
+    def from_rosparam(cls):
+        pack_path = rospkg.RosPack().get_path('detic_ros')
 
-    detic_config_path = rospy.get_param('~detic_config_path', default_detic_config_path)
-    confidence_threshold = rospy.get_param('~confidence_threshold', 0.5)
-    model_weights_path = rospy.get_param('~model_weights_path', default_model_weights_path)
+        default_detic_config_path = os.path.join(
+            pack_path, 'detic_configs', 
+            'Detic_LCOCOI21k_CLIP_SwinB_896b32_4x_ft4x_max-size.yaml')
 
+        default_model_weights_path = os.path.join(
+            pack_path, 'models',
+            'Detic_LCOCOI21k_CLIP_SwinB_896b32_4x_ft4x_max-size.pth')
+
+        return cls(
+                rospy.get_param('~out_debug_img', True),
+                rospy.get_param('~out_debug_segimage', False),
+                rospy.get_param('~vocabulary', 'lvis'),
+                rospy.get_param('~detic_config_path', default_detic_config_path),
+                rospy.get_param('~model_weights_path', default_model_weights_path),
+                rospy.get_param('~confidence_threshold', 0.5))
+
+
+def cfg_from_nodeconfig(node_config: NodeConfig):
     cfg = get_cfg()
     add_centernet_config(cfg)
     add_detic_config(cfg)
-    cfg.merge_from_file(detic_config_path)
-    cfg.MODEL.RETINANET.SCORE_THRESH_TEST = confidence_threshold
-    cfg.MODEL.ROI_HEADS.SCORE_THRESH_TEST = confidence_threshold
-    cfg.MODEL.PANOPTIC_FPN.COMBINE.INSTANCES_CONFIDENCE_THRESH = confidence_threshold
-    cfg.merge_from_list(['MODEL.WEIGHTS', model_weights_path])
+    cfg.merge_from_file(node_config.detic_config_path)
+    cfg.MODEL.RETINANET.SCORE_THRESH_TEST = node_config.confidence_threshold
+    cfg.MODEL.ROI_HEADS.SCORE_THRESH_TEST = node_config.confidence_threshold
+    cfg.MODEL.PANOPTIC_FPN.COMBINE.INSTANCES_CONFIDENCE_THRESH = node_config.confidence_threshold
+    cfg.merge_from_list(['MODEL.WEIGHTS', node_config.model_weights_path])
 
     # Similar to https://github.com/facebookresearch/Detic/demo.py
     cfg.MODEL.ROI_BOX_HEAD.ZEROSHOT_WEIGHT_PATH = 'rand' # load later
     cfg.MODEL.ROI_HEADS.ONE_CLASS_PER_PROPOSAL = True
 
     # Maybe should edit detic_configs/Base-C2_L_R5021k_640b64_4x.yaml
+    pack_path = rospkg.RosPack().get_path('detic_ros')
     cfg.MODEL.ROI_BOX_HEAD.CAT_FREQ_PATH = os.path.join(
             pack_path, 'datasets/metadata/lvis_v1_train_cat_info.json')
 
@@ -59,29 +77,25 @@ def cfg_from_rosparam():
 
 class DeticRosNode:
 
-    @dataclasses.dataclass
     class DummyArgs: 
-        # Because VisualizationDemo class requires args
         vocabulary: str
-        @classmethod
-        def from_rosparam(cls): 
-            vocabulary = rospy.get_param('~vocabulary', 'lvis')
+        def __init__(self, vocabulary):
             assert vocabulary in ['lvis', 'openimages', 'objects365', 'coco', 'custom']
-            return cls(vocabulary)
+            self.vocabulary = vocabulary
 
-    def __init__(self, cfg, dummy_args):
+    def __init__(self, node_config: Optional[NodeConfig]=None):
+        if node_config is None:
+            node_config = NodeConfig.from_rosparam()
+        cfg = cfg_from_nodeconfig(node_config)
+        dummy_args = self.DummyArgs(node_config.voabulary)
         self.predictor = VisualizationDemo(cfg, dummy_args)
+
         rospy.Subscriber('~input_image', Image, self.callback)
         self.pub_debug_image = rospy.Publisher('~debug_image', Image, queue_size=10)
         self.pub_segmentation_image = rospy.Publisher('~segmentation_image', Image, queue_size=10)
         self.pub_info = rospy.Publisher('~segmentation_info', SegmentationInfo, queue_size=10)
         self.friendly_seg_value = rospy.get_param('~friendly_seg_value', False)
-
-    @classmethod
-    def from_rosparam(cls):
-        cfg = cfg_from_rosparam()
-        dummy_args = cls.DummyArgs.from_rosparam()
-        return cls(cfg, dummy_args)
+        rospy.loginfo('initialized node')
 
     def callback(self, msg):
         bridge = CvBridge()
@@ -133,5 +147,5 @@ if __name__=='__main__':
     adhoc_hack_metadata_path()
 
     rospy.init_node('detic_node', anonymous=True)
-    node = DeticRosNode.from_rosparam()
+    node = DeticRosNode()
     rospy.spin()
