@@ -84,6 +84,7 @@ if __name__=='__main__':
             assert vocabulary in ['lvis', 'openimages', 'objects365', 'coco', 'custom']
             return cls(vocabulary)
 
+    friendly_seg_value = rospy.get_param('~friendly_seg_value', False)
 
     mp.set_start_method("spawn", force=True)
     # TODO(HiroIshida) add logger ??
@@ -114,8 +115,12 @@ if __name__=='__main__':
         seg_img.is_bigendian = 0
         seg_img.step = seg_img.width * 1
         data = np.zeros((seg_img.height, seg_img.width)).astype(np.uint8)
+
+        assert len(instances.pred_masks) - 1
+        friendly_scaling = 256//len(instances.pred_masks + 1) if friendly_seg_value else 1
         for i, mask in enumerate(instances.pred_masks):
-            data[mask] = i 
+            # lable 0 is reserved for background label, so starting from 1
+            data[mask] = (i + 1) * friendly_scaling
         seg_img.data = data.flatten().tolist()
         pub_segmentation_image.publish(seg_img)
 
