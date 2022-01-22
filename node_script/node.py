@@ -21,6 +21,7 @@ import rospy
 import rospkg
 from cv_bridge import CvBridge
 from sensor_msgs.msg import Image
+from detic_ros.msg import SegmentationInfo
 
 sys.path.insert(0, os.path.join(sys.path[0], 'third_party/CenterNet2/projects/CenterNet2/'))
 
@@ -88,20 +89,20 @@ if __name__=='__main__':
 
     mp.set_start_method("spawn", force=True)
     # TODO(HiroIshida) add logger ??
-    demo = VisualizationDemo(cfg, DummyArgs.from_rosparam())
-
+    predictor = VisualizationDemo(cfg, DummyArgs.from_rosparam())
 
     rospy.init_node('detic_node', anonymous=True)
     input_image = rospy.get_param('~input_image', '/kinect_head/rgb/half/image_rect_color')
     pub_debug_image = rospy.Publisher('debug_detic_image', Image, queue_size=10)
     pub_segmentation_image = rospy.Publisher('segmentation_image', Image, queue_size=10)
+    pub_info = rospy.Publisher('segmentation_info', SegmentationInfo, queue_size=10)
 
     import time
     def callback(msg):
         bridge = CvBridge()
         img = bridge.imgmsg_to_cv2(msg, desired_encoding='passthrough')
         ts = time.time()
-        predictions, visualized_output = demo.run_on_image(img)
+        predictions, visualized_output = predictor.run_on_image(img)
         instances = predictions['instances'].to(torch.device("cpu"))
         rospy.loginfo('elapsed time to inference {}'.format(time.time() - ts))
 
@@ -123,6 +124,15 @@ if __name__=='__main__':
             data[mask] = (i + 1) * friendly_scaling
         seg_img.data = data.flatten().tolist()
         pub_segmentation_image.publish(seg_img)
+
+        # Create segmentation info message
+        class_names = predictor.metadata.get("thing_classes", None)
+        class_indexes = instances.pred_classes.tolist()
+        class_names_detected = ['background'] + [class_names[i] for i in class_indexes]
+        seginfo = SegmentationInfo()
+        seginfo.detected_classes = class_names_detected
+        seginfo.scores = instances.scores
+        pub_info.publish(seginfo)
 
     rospy.Subscriber(input_image, Image, callback)
     rospy.spin()
