@@ -90,11 +90,15 @@ if __name__=='__main__':
 
 
     rospy.init_node('detic_node', anonymous=True)
+    input_image = rospy.get_param('~input_image', '/kinect_head/rgb/image_color')
+    pub = rospy.Publisher('debug_detic_image', Image, queue_size=10)
     def callback(msg):
         bridge = CvBridge()
         img = bridge.imgmsg_to_cv2(msg, desired_encoding='passthrough')
         predictions, visualized_output = demo.run_on_image(img)
+        msg_out = bridge.cv2_to_imgmsg(visualized_output.get_image(), encoding="passthrough")
+        pub.publish(msg_out)
+        rospy.loginfo('published image')
 
-    input_image = rospy.get_param('~input_image', '/kinect_head/rgb/image_color')
     rospy.Subscriber(input_image, Image, callback)
     rospy.spin()
