@@ -25,6 +25,7 @@ from detic_ros.msg import SegmentationInfo
 sys.path.insert(0, os.path.join(sys.path[0], 'third_party/CenterNet2/projects/CenterNet2/'))
 
 from centernet.config import add_centernet_config
+import detic
 from detic.config import add_detic_config
 from detic.predictor import VisualizationDemo
 
@@ -67,6 +68,7 @@ def cfg_from_rosparam():
 
     cfg.freeze()
     return cfg
+
 
 class DeticRosNode:
 
@@ -135,7 +137,18 @@ class DeticRosNode:
         self.pub_info.publish(seginfo)
 
 
+def adhoc_hack_metadata_path():
+    # because original BUILDIN_CLASSIFIER is somehow posi-dep
+    rospack = rospkg.RosPack()
+    pack_path = rospack.get_path('detic_ros')
+    path_dict = detic.predictor.BUILDIN_CLASSIFIER
+    for key in  path_dict.keys():
+        path_dict[key] = os.path.join(pack_path, path_dict[key])
+
+
 if __name__=='__main__':
+    adhoc_hack_metadata_path()
+
     rospy.init_node('detic_node', anonymous=True)
     node = DeticRosNode.from_rosparam()
     rospy.spin()
