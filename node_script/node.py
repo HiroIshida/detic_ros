@@ -1,20 +1,11 @@
 #!/usr/bin/env python3
-import argparse
 import dataclasses
-import glob
 import numpy as np
 import os
-import tempfile
-import time
-import warnings
-import cv2
-import tqdm
 import sys
-
+import time
 import torch
 from detectron2.config import get_cfg
-from detectron2.data.detection_utils import read_image
-from detectron2.utils.logger import setup_logger
 
 import rospy
 import rospkg
@@ -22,8 +13,8 @@ from cv_bridge import CvBridge
 from sensor_msgs.msg import Image
 from detic_ros.msg import SegmentationInfo
 
+# Dirty but no way, because CenterNet2 is not package oriented
 sys.path.insert(0, os.path.join(sys.path[0], 'third_party/CenterNet2/projects/CenterNet2/'))
-
 from centernet.config import add_centernet_config
 import detic
 from detic.config import add_detic_config
@@ -31,10 +22,6 @@ from detic.predictor import VisualizationDemo
 
 
 def cfg_from_rosparam():
-    """ 
-    setup detctron2 config
-    """
-
     rospack = rospkg.RosPack()
     pack_path = rospack.get_path('detic_ros')
     default_detic_config_path = os.path.join(
@@ -90,13 +77,11 @@ class DeticRosNode:
         self.pub_info = rospy.Publisher('~segmentation_info', SegmentationInfo, queue_size=10)
         self.friendly_seg_value = rospy.get_param('~friendly_seg_value', False)
 
-
     @classmethod
     def from_rosparam(cls):
         cfg = cfg_from_rosparam()
         dummy_args = cls.DummyArgs.from_rosparam()
         return cls(cfg, dummy_args)
-
 
     def callback(self, msg):
         bridge = CvBridge()
