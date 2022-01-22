@@ -1,4 +1,4 @@
-FROM nvidia/cuda:11.0-runtime-ubuntu20.04
+FROM nvidia/cuda:11.0-devel-ubuntu20.04
 
 RUN echo 'Etc/UTC' > /etc/timezone && \
     ln -s /usr/share/zoneinfo/Etc/UTC /etc/localtime && \
@@ -74,19 +74,19 @@ USER user
 CMD /bin/bash
 SHELL ["/bin/bash", "-c"]
 
-RUN sudo apt install python3-pip -y 
-RUN pip3 install torch torchvision
-RUN git clone https://github.com/facebookresearch/detectron2.git
-RUN cd detectron2 && pip3 install . --user
-
-RUN source /opt/ros/noetic/setup.bash
-RUN mkdir -p ~/detic_ws/src
-RUN cd ~/detic_ws/src && git clone https://github.com/HiroIshida/detic_ros.git
-RUN cd ~/detic_ws/src/detic_ros && git submodule update --init --recursive
-RUN cd ~/detic_ws/src/detic_ros/Detic && pip3 install -r requirements.txt 
-RUN cd ~/detic_ws/src/detic_ros && ./prepare_dataset.sh
-
-RUN source /opt/ros/noetic/setup.bash && cd ~/detic_ws && catkin build
+#RUN sudo apt install python3-pip -y 
+#RUN pip3 install torch torchvision
+#RUN git clone https://github.com/facebookresearch/detectron2.git
+#RUN cd detectron2 && pip3 install . --user
+#
+#RUN source /opt/ros/noetic/setup.bash
+#RUN mkdir -p ~/detic_ws/src
+#RUN cd ~/detic_ws/src && git clone https://github.com/HiroIshida/detic_ros.git
+#RUN cd ~/detic_ws/src/detic_ros && git submodule update --init --recursive
+#RUN cd ~/detic_ws/src/detic_ros/Detic && pip3 install -r requirements.txt 
+#RUN cd ~/detic_ws/src/detic_ros && ./prepare_dataset.sh
+#
+#RUN source /opt/ros/noetic/setup.bash && cd ~/detic_ws && catkin build
 
 # setup dotfiles (also source)
 RUN git clone https://github.com/HiroIshida/dotfiles2.git
