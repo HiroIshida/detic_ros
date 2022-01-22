@@ -4,6 +4,7 @@
         output="screen" >
   <remap from="~input_image" to="/kinect_head/rgb/half/image_rect_color"/>
   <rosparam>
+      verbose: true
       out_debug_img: true
       out_debug_segimage: true
       confidence_threshold: 0.6

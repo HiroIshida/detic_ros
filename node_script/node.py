@@ -4,7 +4,6 @@ import dataclasses
 import numpy as np
 import os
 import sys
-import time
 import torch
 from typing import Optional
 from detectron2.config import get_cfg
@@ -27,6 +26,7 @@ from detic.predictor import VisualizationDemo
 class NodeConfig:
     out_debug_img: bool
     out_debug_segimage: bool
+    verbose: bool
     voabulary: str
     detic_config_path: str
     model_weights_path: str
@@ -47,6 +47,7 @@ class NodeConfig:
         return cls(
                 rospy.get_param('~out_debug_img', True),
                 rospy.get_param('~out_debug_segimage', False),
+                rospy.get_param('~verbose', False),
                 rospy.get_param('~vocabulary', 'lvis'),
                 rospy.get_param('~detic_config_path', default_detic_config_path),
                 rospy.get_param('~model_weights_path', default_model_weights_path),
@@ -104,10 +105,14 @@ class DeticRosNode:
     def callback(self, msg):
         bridge = CvBridge()
         img = bridge.imgmsg_to_cv2(msg, desired_encoding='passthrough')
-        ts = time.time()
+        time_start = rospy.Time.now()
         predictions, visualized_output = self.predictor.run_on_image(img)
         instances = predictions['instances'].to(torch.device("cpu"))
-        rospy.loginfo('elapsed time to inference {}'.format(time.time() - ts))
+
+        if self.node_config.verbose:
+            time_elapsed = (rospy.Time.now() - time_start).to_sec()
+            rospy.loginfo('elapsed time to inference {}'.format(time_elapsed))
+            rospy.loginfo('detected {} classes'.format(len(instances)))
 
         # Create debug image
         msg_out = bridge.cv2_to_imgmsg(visualized_output.get_image(), encoding="passthrough")
