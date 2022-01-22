@@ -84,12 +84,10 @@ class DeticRosNode:
 
     def __init__(self, cfg, dummy_args):
         self.predictor = VisualizationDemo(cfg, dummy_args)
-        input_image = rospy.get_param('~input_image', '/kinect_head/rgb/half/image_rect_color')
-
-        rospy.Subscriber(input_image, Image, self.callback)
-        self.pub_debug_image = rospy.Publisher('debug_detic_image', Image, queue_size=10)
-        self.pub_segmentation_image = rospy.Publisher('segmentation_image', Image, queue_size=10)
-        self.pub_info = rospy.Publisher('segmentation_info', SegmentationInfo, queue_size=10)
+        rospy.Subscriber('~input_image', Image, self.callback)
+        self.pub_debug_image = rospy.Publisher('~debug_image', Image, queue_size=10)
+        self.pub_segmentation_image = rospy.Publisher('~segmentation_image', Image, queue_size=10)
+        self.pub_info = rospy.Publisher('~segmentation_info', SegmentationInfo, queue_size=10)
         self.friendly_seg_value = rospy.get_param('~friendly_seg_value', False)
 
 

@@ -1,7 +1,7 @@
 <launch>
-  <node name="detic_node"
+  <node name="detic_segmentor"
         pkg="detic_ros" type="node.py"
         output="screen" >
-    <remap from="~input_image" to="/kinect_head/rgb/image_color"/>
+  <remap from="~input_image" to="/kinect_head/rgb/half/image_rect_color"/>
   </node>
 </launch>
