@@ -1,5 +1,7 @@
 #!/usr/bin/bash
 
+git submodule update --init --recursive 
+
 ln -sf Detic/configs detic_configs 
 ln -sf Detic/datasets datasets
 
