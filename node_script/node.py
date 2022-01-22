@@ -12,6 +12,7 @@ import cv2
 import tqdm
 import sys
 
+import torch
 from detectron2.config import get_cfg
 from detectron2.data.detection_utils import read_image
 from detectron2.utils.logger import setup_logger
@@ -90,15 +91,33 @@ if __name__=='__main__':
 
 
     rospy.init_node('detic_node', anonymous=True)
-    input_image = rospy.get_param('~input_image', '/kinect_head/rgb/image_color')
-    pub = rospy.Publisher('debug_detic_image', Image, queue_size=10)
+    input_image = rospy.get_param('~input_image', '/kinect_head/rgb/half/image_rect_color')
+    pub_debug_image = rospy.Publisher('debug_detic_image', Image, queue_size=10)
+    pub_segmentation_image = rospy.Publisher('segmentation_image', Image, queue_size=10)
+
+    import time
     def callback(msg):
         bridge = CvBridge()
         img = bridge.imgmsg_to_cv2(msg, desired_encoding='passthrough')
+        ts = time.time()
         predictions, visualized_output = demo.run_on_image(img)
+        instances = predictions['instances'].to(torch.device("cpu"))
+        rospy.loginfo('elapsed time to inference {}'.format(time.time() - ts))
+
+        # Create debug image
         msg_out = bridge.cv2_to_imgmsg(visualized_output.get_image(), encoding="passthrough")
-        pub.publish(msg_out)
-        rospy.loginfo('published image')
+        pub_debug_image.publish(msg_out)
+
+        # Create Image containing segmentation info
+        seg_img = Image(height=img.shape[0], width=img.shape[1])
+        seg_img.encoding = '8UC1' # TODO(HiroIshida) are 256 classes enough??
+        seg_img.is_bigendian = 0
+        seg_img.step = seg_img.width * 1
+        data = np.zeros((seg_img.height, seg_img.width)).astype(np.uint8)
+        for i, mask in enumerate(instances.pred_masks):
+            data[mask] = i 
+        seg_img.data = data.flatten().tolist()
+        pub_segmentation_image.publish(seg_img)
 
     rospy.Subscriber(input_image, Image, callback)
     rospy.spin()
