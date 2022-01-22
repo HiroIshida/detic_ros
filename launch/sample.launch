@@ -3,5 +3,10 @@
         pkg="detic_ros" type="node.py"
         output="screen" >
   <remap from="~input_image" to="/kinect_head/rgb/half/image_rect_color"/>
+  <rosparam>
+      out_debug_img: true
+      out_debug_segimage: true
+      confidence_threshold: 0.6
+  </rosparam>
   </node>
 </launch>

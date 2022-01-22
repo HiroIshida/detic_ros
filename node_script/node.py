@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import copy
 import dataclasses
 import numpy as np
 import os
@@ -90,11 +91,14 @@ class DeticRosNode:
         dummy_args = self.DummyArgs(node_config.voabulary)
         self.predictor = VisualizationDemo(cfg, dummy_args)
 
-        rospy.Subscriber('~input_image', Image, self.callback)
+        self.node_config = node_config
+        self.sub = rospy.Subscriber('~input_image', Image, self.callback)
         self.pub_debug_image = rospy.Publisher('~debug_image', Image, queue_size=10)
         self.pub_segmentation_image = rospy.Publisher('~segmentation_image', Image, queue_size=10)
+        if node_config.out_debug_segimage:
+            self.pub_debug_segmentation_image = rospy.Publisher('~debug_segmentation_image', Image, queue_size=10)
+
         self.pub_info = rospy.Publisher('~segmentation_info', SegmentationInfo, queue_size=10)
-        self.friendly_seg_value = rospy.get_param('~friendly_seg_value', False)
         rospy.loginfo('initialized node')
 
     def callback(self, msg):
@@ -117,12 +121,17 @@ class DeticRosNode:
         data = np.zeros((seg_img.height, seg_img.width)).astype(np.uint8)
 
         assert len(instances.pred_masks) - 1
-        friendly_scaling = 256//len(instances.pred_masks + 1) if self.friendly_seg_value else 1
         for i, mask in enumerate(instances.pred_masks):
             # lable 0 is reserved for background label, so starting from 1
-            data[mask] = (i + 1) * friendly_scaling
+            data[mask] = (i + 1)
         seg_img.data = data.flatten().tolist()
         self.pub_segmentation_image.publish(seg_img)
+
+        if self.node_config.out_debug_segimage:
+            debug_seg_img = copy.deepcopy(seg_img)
+            human_friendly_scaling = 256//len(instances.pred_masks + 1)
+            debug_seg_img.data *= human_friendly_scaling
+            self.pub_debug_segmentation_image.publish(debug_seg_img) 
 
         # Create segmentation info message
         class_names = self.predictor.metadata.get("thing_classes", None)
