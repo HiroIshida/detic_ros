@@ -2,7 +2,6 @@
 import argparse
 import dataclasses
 import glob
-import multiprocessing as mp
 import numpy as np
 import os
 import tempfile
@@ -45,11 +44,9 @@ def cfg_from_rosparam():
         pack_path, 'models',
         'Detic_LCOCOI21k_CLIP_SwinB_896b32_4x_ft4x_max-size.pth')
 
-
     detic_config_path = rospy.get_param('~detic_config_path', default_detic_config_path)
     confidence_threshold = rospy.get_param('~confidence_threshold', 0.5)
     model_weights_path = rospy.get_param('~model_weights_path', default_model_weights_path)
-
 
     cfg = get_cfg()
     add_centernet_config(cfg)
@@ -71,9 +68,7 @@ def cfg_from_rosparam():
     cfg.freeze()
     return cfg
 
-if __name__=='__main__':
-    cfg = cfg_from_rosparam()
-
+class DeticRosNode:
 
     @dataclasses.dataclass
     class DummyArgs: 
@@ -85,30 +80,35 @@ if __name__=='__main__':
             assert vocabulary in ['lvis', 'openimages', 'objects365', 'coco', 'custom']
             return cls(vocabulary)
 
-    friendly_seg_value = rospy.get_param('~friendly_seg_value', False)
+    def __init__(self, cfg, dummy_args):
+        self.predictor = VisualizationDemo(cfg, dummy_args)
+        input_image = rospy.get_param('~input_image', '/kinect_head/rgb/half/image_rect_color')
 
-    mp.set_start_method("spawn", force=True)
-    # TODO(HiroIshida) add logger ??
-    predictor = VisualizationDemo(cfg, DummyArgs.from_rosparam())
+        rospy.Subscriber(input_image, Image, self.callback)
+        self.pub_debug_image = rospy.Publisher('debug_detic_image', Image, queue_size=10)
+        self.pub_segmentation_image = rospy.Publisher('segmentation_image', Image, queue_size=10)
+        self.pub_info = rospy.Publisher('segmentation_info', SegmentationInfo, queue_size=10)
+        self.friendly_seg_value = rospy.get_param('~friendly_seg_value', False)
 
-    rospy.init_node('detic_node', anonymous=True)
-    input_image = rospy.get_param('~input_image', '/kinect_head/rgb/half/image_rect_color')
-    pub_debug_image = rospy.Publisher('debug_detic_image', Image, queue_size=10)
-    pub_segmentation_image = rospy.Publisher('segmentation_image', Image, queue_size=10)
-    pub_info = rospy.Publisher('segmentation_info', SegmentationInfo, queue_size=10)
 
-    import time
-    def callback(msg):
+    @classmethod
+    def from_rosparam(cls):
+        cfg = cfg_from_rosparam()
+        dummy_args = cls.DummyArgs.from_rosparam()
+        return cls(cfg, dummy_args)
+
+
+    def callback(self, msg):
         bridge = CvBridge()
         img = bridge.imgmsg_to_cv2(msg, desired_encoding='passthrough')
         ts = time.time()
-        predictions, visualized_output = predictor.run_on_image(img)
+        predictions, visualized_output = self.predictor.run_on_image(img)
         instances = predictions['instances'].to(torch.device("cpu"))
         rospy.loginfo('elapsed time to inference {}'.format(time.time() - ts))
 
         # Create debug image
         msg_out = bridge.cv2_to_imgmsg(visualized_output.get_image(), encoding="passthrough")
-        pub_debug_image.publish(msg_out)
+        self.pub_debug_image.publish(msg_out)
 
         # Create Image containing segmentation info
         seg_img = Image(height=img.shape[0], width=img.shape[1])
@@ -118,21 +118,24 @@ if __name__=='__main__':
         data = np.zeros((seg_img.height, seg_img.width)).astype(np.uint8)
 
         assert len(instances.pred_masks) - 1
-        friendly_scaling = 256//len(instances.pred_masks + 1) if friendly_seg_value else 1
+        friendly_scaling = 256//len(instances.pred_masks + 1) if self.friendly_seg_value else 1
         for i, mask in enumerate(instances.pred_masks):
             # lable 0 is reserved for background label, so starting from 1
             data[mask] = (i + 1) * friendly_scaling
         seg_img.data = data.flatten().tolist()
-        pub_segmentation_image.publish(seg_img)
+        self.pub_segmentation_image.publish(seg_img)
 
         # Create segmentation info message
-        class_names = predictor.metadata.get("thing_classes", None)
+        class_names = self.predictor.metadata.get("thing_classes", None)
         class_indexes = instances.pred_classes.tolist()
         class_names_detected = ['background'] + [class_names[i] for i in class_indexes]
         seginfo = SegmentationInfo()
         seginfo.detected_classes = class_names_detected
         seginfo.scores = instances.scores
-        pub_info.publish(seginfo)
+        self.pub_info.publish(seginfo)
 
-    rospy.Subscriber(input_image, Image, callback)
+
+if __name__=='__main__':
+    rospy.init_node('detic_node', anonymous=True)
+    node = DeticRosNode.from_rosparam()
     rospy.spin()
