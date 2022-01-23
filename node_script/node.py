@@ -70,7 +70,7 @@ class DeticRosNode:
         self.pub_info = rospy.Publisher('~segmentation_info', SegmentationInfo, queue_size=10)
         rospy.loginfo('initialized node')
 
-    def callback(self, msg):
+    def callback(self, msg: Image):
         bridge = CvBridge()
         img = bridge.imgmsg_to_cv2(msg, desired_encoding='passthrough')
         time_start = rospy.Time.now()
@@ -83,11 +83,13 @@ class DeticRosNode:
             rospy.loginfo('detected {} classes'.format(len(instances)))
 
         # Create debug image
-        msg_out = bridge.cv2_to_imgmsg(visualized_output.get_image(), encoding="rgb8")
-        self.pub_debug_image.publish(msg_out)
+        debug_img = bridge.cv2_to_imgmsg(visualized_output.get_image(), encoding="rgb8")
+        debug_img.header = msg.header
+        self.pub_debug_image.publish(debug_img)
 
         # Create Image containing segmentation info
         seg_img = Image(height=img.shape[0], width=img.shape[1])
+        seg_img.header = msg.header
         seg_img.encoding = '8UC1' # TODO(HiroIshida) are 256 classes enough??
         seg_img.is_bigendian = 0
         seg_img.step = seg_img.width * 1
@@ -116,6 +118,7 @@ class DeticRosNode:
         seginfo = SegmentationInfo()
         seginfo.detected_classes = class_names_detected
         seginfo.scores = instances.scores
+        seginfo.header = msg.header
         self.pub_info.publish(seginfo)
 
 
