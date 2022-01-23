@@ -9,11 +9,9 @@
         pkg="detic_ros" type="node.py"
         output="screen" >
   <remap from="~input_image" to="$(arg input_image)"/>
-  <rosparam>
-      verbose: $(arg verbose)
-      out_debug_img: $(arg out_debug_img)
-      out_debug_segimage: $(arg out_debug_segimage)
-      confidence_threshold: $(arg confidence_threshold)
-  </rosparam>
+  <param name="verbose" value="$(arg verbose)"/>
+  <param name="out_debug_img" value="$(arg out_debug_img)"/>
+  <param name="out_debug_segimage" value="$(arg out_debug_segimage)"/>
+  <param name="confidence_threshold" value="$(arg confidence_threshold)"/>
   </node>
 </launch>
