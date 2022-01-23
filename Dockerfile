@@ -1,4 +1,4 @@
-FROM nvidia/cuda:11.0-devel-ubuntu20.04
+FROM nvidia/cuda:11.1-devel-ubuntu20.04
 
 RUN echo 'Etc/UTC' > /etc/timezone && \
     ln -s /usr/share/zoneinfo/Etc/UTC /etc/localtime && \
@@ -67,8 +67,7 @@ USER user
 CMD /bin/bash
 SHELL ["/bin/bash", "-c"]
 
-RUN sudo apt install python3-pip -y 
-RUN pip3 install torch torchvision
+RUN sudo apt install python3-pip -y
 RUN pip3 install torch==1.9.0+cu111 torchvision==0.10.0+cu111 torchaudio==0.9.0 -f https://download.pytorch.org/whl/torch_stable.html 
 
 # Installing catkin package
@@ -84,4 +83,7 @@ RUN cd ~/detic_ws && source /opt/ros/noetic/setup.bash && catkin build
 RUN touch ~/.bashrc
 RUN echo "source ~/detic_ws/devel/setup.bash" >> ~/.bashrc
 RUN echo 'export PATH="$PATH:$HOME/.local/bin"' >> ~/.bashrc
+
+RUN pip3 install torch==1.9.0+cu111 torchvision==0.10.0+cu111 torchaudio==0.9.0 -f https://download.pytorch.org/whl/torch_stable.html
+
 CMD ["bash"]
