@@ -33,7 +33,7 @@ docker run --rm --net=host -it --gpus 1 detic_ros:latest \
 - `~debug_segmentation_image` (`sensor_msgs/Image` with `8UC1` encoding)
   - Say detected class number is 14, `~segmentation_image` in grayscale image is almost completely dark and not good for debugging. Therefore this topic scale the value to [0 ~ 255] so that grayscale image is human-friendly.
 - `~segmentation_info` (`detic_ros/SegmentationInfo`)
-  - class name list and confidence score list corresponding to `~segmentation_image`
+  - class name list and confidence score list corresponding to `~segmentation_image`. Note that `score` of `background` class is always 1.0
 
 As for rosparam, see [node_cofig.py](./node_script/node_config.py).
 
