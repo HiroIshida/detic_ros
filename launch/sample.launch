@@ -1,13 +1,19 @@
 <launch>
+  <arg name="verbose" default="true" />
+  <arg name="out_debug_img" default="true" />
+  <arg name="out_debug_segimage" default="true" />
+  <arg name="confidence_threshold" default="0.5" />
+  <arg name="input_image" default="input" />
+
   <node name="detic_segmentor"
         pkg="detic_ros" type="node.py"
         output="screen" >
-  <remap from="~input_image" to="/kinect_head/rgb/half/image_rect_color"/>
+  <remap from="~input_image" to="$(arg input_image)"/>
   <rosparam>
-      verbose: true
-      out_debug_img: true
-      out_debug_segimage: true
-      confidence_threshold: 0.6
+      verbose: $(arg verbose)
+      out_debug_img: $(arg out_debug_img)
+      out_debug_segimage: $(arg out_debug_segimage)
+      confidence_threshold: $(arg confidence_threshold)
   </rosparam>
   </node>
 </launch>
