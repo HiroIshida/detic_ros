@@ -6,29 +6,21 @@ This package is still in under active-development. [Here](https://github.com/Hir
 ![image](https://drive.google.com/uc?export=view&id=1aiWK51VL9pQvEKABpodRG7CkJRcjZodw)
 
 
-## Installation
-Please install torch compatible with your cuda version beforehand:
+## Howto use
+Build docker image
 ```bash
-pip3 install torch==1.9.0+cu111 torchvision==0.10.0+cu111 torchaudio==0.9.0 -f https://download.pytorch.org/whl/torch_stable.html # 
-```
-see [official installation guide](https://pytorch.org/get-started/previous-versions/) for detail.
-
-Then, build ros package: (if you use kinetic/melodic, configure you workspace using python3)
-```bash
-mkdir -p ~/detic_ws/src
-cd ~/detic_ws/src
 git clone https://github.com/HiroIshida/detic_ros.git
 cd detic_ros
-pip3 install -r requirements.txt
-./prepare.sh
-source /opt/ros/noetic/setup.bash 
-rosdep install from-paths . -i -r -y
-cd ~/detic_ws && catkin build
+docker build -t detic_ros .
 ```
 
-## Run using PR2 topics (jsk lab only)
+Example for running node on pr1040 network:
 ```bash
-roslaunch detic_ros sample.launch
+docker run --rm --net=host -it --gpus 1 detic_ros:latest \
+    /bin/bash -i -c \
+    'source ~/.bashrc; \
+    rossetip; rossetmaster pr1040; \
+    roslaunch detic_ros sample.launch input_image:=/kinect_head/rgb/half/image_rect_color'
 ```
 
 ## ROS node information
@@ -44,3 +36,4 @@ roslaunch detic_ros sample.launch
   - class name list and confidence score list corresponding to `~segmentation_image`
 
 As for rosparam, see [node_cofig.py](./node_script/node_config.py).
+
