@@ -7,13 +7,14 @@ This package is still in under active-development. [Here](https://github.com/Hir
 
 
 ## Howto use
-Build docker image
+#### Building docker image
 ```bash
 git clone https://github.com/HiroIshida/detic_ros.git
 cd detic_ros
 docker build -t detic_ros .
 ```
 
+#### step1 (launch Detic-segmentor node)
 Example for running node on pr1040 network:
 ```bash
 docker run --rm --net=host -it --gpus 1 detic_ros:latest \
@@ -22,6 +23,9 @@ docker run --rm --net=host -it --gpus 1 detic_ros:latest \
     rossetip; rossetmaster pr1040; \
     roslaunch detic_ros sample.launch input_image:=/kinect_head/rgb/half/image_rect_color'
 ```
+
+#### step2 (Subscribe from node in step1 and do something)
+Example for using the published topic from the node above is [masked_image_publisher.py](./example/masked_image_publisher.py). By using subscribed segmentation image and segmentation info and, this node converts a subscribed rgb image into a masked rgb image.
 
 ## ROS node information
 - `~input_image` (`sensor_msgs/Image`)
