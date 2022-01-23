@@ -97,13 +97,16 @@ class DeticRosNode:
         for i, mask in enumerate(instances.pred_masks):
             # lable 0 is reserved for background label, so starting from 1
             data[mask] = (i + 1)
-        seg_img.data = data.flatten().tolist()
+        assert data.shape == (seg_img.height, seg_img.width)
+        seg_img.data = data.flatten().astype(np.uint8).tolist()
         self.pub_segmentation_image.publish(seg_img)
 
         if self.node_config.out_debug_segimage:
+            debug_data = copy.deepcopy(data)
+            human_friendly_scaling = 256//(len(instances.pred_masks) + 1)
+            debug_data = debug_data * human_friendly_scaling
             debug_seg_img = copy.deepcopy(seg_img)
-            human_friendly_scaling = 256//len(instances.pred_masks + 1)
-            debug_seg_img.data *= human_friendly_scaling
+            debug_seg_img.data = debug_data.flatten().astype(np.uint8).tolist()
             self.pub_debug_segmentation_image.publish(debug_seg_img) 
 
         # Create segmentation info message
