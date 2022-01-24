@@ -121,6 +121,10 @@ class DeticRosNode:
         seginfo.header = msg.header
         self.pub_info.publish(seginfo)
 
+        if self.node_config.verbose:
+            time_elapsed_total = (rospy.Time.now() - time_start).to_sec()
+            rospy.loginfo('total elapsed time in callback {}'.format(time_elapsed_total))
+
 
 def adhoc_hack_metadata_path():
     # because original BUILDIN_CLASSIFIER is somehow posi-dep
