@@ -1,0 +1,10 @@
+<launch>
+  <arg name="verbose" default="true" />
+  <node name="decompress"
+       pkg="image_transport" type="republish"
+       args="compressed raw"
+       output="screen" respawn="true">
+    <remap from="in" to="/$(arg camera)/rgb/image_rect_color"/>
+    <remap from="out" to="rgb/image_rect_color"/>
+  </node>
+</launch>
