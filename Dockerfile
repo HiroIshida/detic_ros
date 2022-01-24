@@ -60,6 +60,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 RUN apt update && apt install python3-osrf-pycommon python3-catkin-tools -y
 RUN apt update && apt install ros-noetic-jsk-tools -y
+RUN apt update && apt install ros-noetic-image-transport-plugins
 
 WORKDIR /home/user
 
