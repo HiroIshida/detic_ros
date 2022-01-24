@@ -61,13 +61,15 @@ class DeticRosNode:
         self.predictor = VisualizationDemo(cfg, dummy_args)
 
         self.node_config = node_config
-        self.sub = rospy.Subscriber('~input_image', Image, self.callback)
-        self.pub_debug_image = rospy.Publisher('~debug_image', Image, queue_size=10)
-        self.pub_segmentation_image = rospy.Publisher('~segmentation_image', Image, queue_size=10)
+        # As for large buff_size please see:
+        # https://answers.ros.org/question/220502/image-subscriber-lag-despite-queue-1/?answer=220505?answer=220505#post-id-22050://answers.ros.org/question/220502/image-subscriber-lag-despite-queue-1/?answer=220505?answer=220505#post-id-220505
+        self.sub = rospy.Subscriber('~input_image', Image, self.callback, queue_size=1, buff_size=2**24)
+        self.pub_debug_image = rospy.Publisher('~debug_image', Image, queue_size=1)
+        self.pub_segmentation_image = rospy.Publisher('~segmentation_image', Image, queue_size=1)
         if node_config.out_debug_segimage:
             self.pub_debug_segmentation_image = rospy.Publisher('~debug_segmentation_image', Image, queue_size=10)
 
-        self.pub_info = rospy.Publisher('~segmentation_info', SegmentationInfo, queue_size=10)
+        self.pub_info = rospy.Publisher('~segmentation_info', SegmentationInfo, queue_size=1)
         rospy.loginfo('initialized node')
 
     def callback(self, msg: Image):
