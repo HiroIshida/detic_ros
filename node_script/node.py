@@ -83,9 +83,10 @@ class DeticRosNode:
             rospy.loginfo('detected {} classes'.format(len(instances)))
 
         # Create debug image
-        debug_img = bridge.cv2_to_imgmsg(visualized_output.get_image(), encoding="rgb8")
-        debug_img.header = msg.header
-        self.pub_debug_image.publish(debug_img)
+        if self.node_config.out_debug_img:
+            debug_img = bridge.cv2_to_imgmsg(visualized_output.get_image(), encoding="rgb8")
+            debug_img.header = msg.header
+            self.pub_debug_image.publish(debug_img)
 
         # Create Image containing segmentation info
         seg_img = Image(height=img.shape[0], width=img.shape[1])
