@@ -21,8 +21,13 @@ docker run --rm --net=host -it --gpus 1 detic_ros:latest \
     /bin/bash -i -c \
     'source ~/.bashrc; \
     rossetip; rossetmaster pr1040; \
-    roslaunch detic_ros sample.launch input_image:=/kinect_head/rgb/half/image_rect_color'
+    roslaunch detic_ros sample.launch \
+    out_debug_img:=true \
+    out_debug_segimg:=false \
+    compressed:=false \
+    input_image:=/kinect_head/rgb/image_color'
 ```
+Change the `pr1040` part and `/kinect_head/rgb/image_color` in command above by your custom host name and an image topic. If compressed image (e.g. `/kinect_head/rgb/image_color/compressed`) corresponding to the specified `input_image` is also published, by setting `compressed:=true`, you can reduce the topic pub-sub latency.
 
 #### step2 (Subscribe from node in step1 and do something)
 Example for using the published topic from the node above is [masked_image_publisher.py](./example/masked_image_publisher.py). By using subscribed segmentation image and segmentation info and, this node converts a subscribed rgb image into a masked rgb image.
