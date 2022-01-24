@@ -61,7 +61,7 @@ class DeticRosNode:
         self.predictor = VisualizationDemo(cfg, dummy_args)
 
         self.node_config = node_config
-        self.sub = rospy.Subscriber('~input_image', Image, self.callback)
+        self.sub = rospy.Subscriber('~input_image', Image, self.callback, queue_size=1)
         self.pub_debug_image = rospy.Publisher('~debug_image', Image, queue_size=10)
         self.pub_segmentation_image = rospy.Publisher('~segmentation_image', Image, queue_size=10)
         if node_config.out_debug_segimage:
