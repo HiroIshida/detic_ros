@@ -117,7 +117,7 @@ class DeticRosNode:
         class_names_detected = ['background'] + [class_names[i] for i in class_indexes]
         seginfo = SegmentationInfo()
         seginfo.detected_classes = class_names_detected
-        seginfo.scores = [1.0] + instances.scores # confidence with 1.0 about background detection
+        seginfo.scores = [1.0] + instances.scores.tolist() # confidence with 1.0 about background detection
         seginfo.header = msg.header
         self.pub_info.publish(seginfo)
 
