@@ -1,0 +1,10 @@
+<launch>
+  <arg name="in" default="in" />
+  <node name="decompresser"
+       pkg="image_transport" type="republish"
+       args="compressed raw"
+       output="screen" respawn="true">
+    <remap from="in" to="/$(arg in)"/>
+    <remap from="out" to="decompressed_image"/>
+  </node>
+</launch>

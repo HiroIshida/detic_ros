@@ -6,6 +6,11 @@
   <arg name="out_debug_segimage" default="true" />
   <arg name="confidence_threshold" default="0.5" />
   <arg name="input_image" default="input" />
+  <arg name="compressed" default="false" />
+
+  <include file="$(find detic_ros)/launch/decompress.launch" if="$(arg compressed)">
+    <arg name="in" value="$(arg input_image)"/>
+  </include>
 
   <group ns='$(arg namespace)'>
     <node name="detic_segmentor"
