@@ -8,7 +8,7 @@
   <arg name="input_image" default="input" />
   <arg name="compressed" default="true" />
 
-  <arg name="_input_image" default="$(arg namespace)/decompressed_image" if="$(arg compressed)"/>
+  <arg name="_input_image" default="/$(arg namespace)/decompressed_image" if="$(arg compressed)"/>
   <arg name="_input_image" default="$(arg input_image)" unless="$(arg compressed)"/>
 
   <group ns='$(arg namespace)'>
