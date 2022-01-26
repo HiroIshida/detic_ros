@@ -104,6 +104,7 @@ class DeticRosNode:
             data[mask] = (i + 1)
         assert data.shape == (seg_img.height, seg_img.width)
         seg_img.data = data.flatten().astype(np.uint8).tolist()
+        assert set(seg_img.data) == set(list(range(len(instances.pred_masks)+1)))
         self.pub_segmentation_image.publish(seg_img)
 
         if self.node_config.out_debug_segimage:
