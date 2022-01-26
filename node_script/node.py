@@ -98,12 +98,15 @@ class DeticRosNode:
         seg_img.step = seg_img.width * 1
         data = np.zeros((seg_img.height, seg_img.width)).astype(np.uint8)
 
-        assert len(instances.pred_masks) - 1
-        for i, mask in enumerate(instances.pred_masks):
+        # largest to smallest order to reduce occlusion.
+        sorted_index = np.argsort([-mask.sum() for mask in instances.pred_masks])
+        for i in sorted_index:
+            mask = instances.pred_masks[i]
             # lable 0 is reserved for background label, so starting from 1
             data[mask] = (i + 1)
         assert data.shape == (seg_img.height, seg_img.width)
         seg_img.data = data.flatten().astype(np.uint8).tolist()
+        assert set(seg_img.data) == set(list(range(len(instances.pred_masks)+1)))
         self.pub_segmentation_image.publish(seg_img)
 
         if self.node_config.out_debug_segimage:
