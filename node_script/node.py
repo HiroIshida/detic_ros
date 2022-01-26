@@ -124,9 +124,12 @@ class DeticRosNode:
         seginfo.header = msg.header
         self.pub_info.publish(seginfo)
 
-        if self.node_config.verbose:
-            time_elapsed_total = (rospy.Time.now() - time_start).to_sec()
-            rospy.loginfo('total elapsed time in callback {}'.format(time_elapsed_total))
+        time_elapsed_total = (rospy.Time.now() - time_start).to_sec()
+        rospy.loginfo('total elapsed time in callback {}'.format(time_elapsed_total))
+
+        total_publication_delay = (rospy.Time.now() - msg.header.stamp).to_sec()
+        responsibility = (time_elapsed_total / total_publication_delay) * 100.0
+        rospy.loginfo('total delay {} sec (this cb {} %)'.format(total_publication_delay, responsibility))
 
 
 def adhoc_hack_metadata_path():
