@@ -76,7 +76,8 @@ class DeticRosNode:
         bridge = CvBridge()
         img = bridge.imgmsg_to_cv2(msg, desired_encoding='passthrough')
         time_start = rospy.Time.now()
-        predictions, visualized_output = self.predictor.run_on_image(img)
+        predictions, visualized_output = self.predictor.run_on_image(
+                img, with_vis_output=self.node_config.out_debug_img)
         instances = predictions['instances'].to(torch.device("cpu"))
 
         if self.node_config.verbose:
