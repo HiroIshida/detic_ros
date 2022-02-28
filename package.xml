@@ -5,6 +5,7 @@
   <description>The detic_ros package</description>
   <maintainer email="h-ishida@jsk.imi.i.u-tokyo.ac.jp">Hirokazu Ishida</maintainer>
   <license>MIT</license>
+  <author>Hirokazu Ishida</author>
   <buildtool_depend>catkin</buildtool_depend>
   <buildtool_depend>python3-catkin-pkg-modules</buildtool_depend>.
   <build_depend>message_generation</build_depend>
