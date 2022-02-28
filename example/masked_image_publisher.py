@@ -17,8 +17,8 @@ class SampleNode:
     def __init__(self, mask_class_name='bottle'):
         image_topic_name = '/kinect_head/rgb/half/image_rect_color'
         sub_image = message_filters.Subscriber(image_topic_name, Image)
-        sub_segmentation = message_filters.Subscriber('/detic_segmentor/segmentation_image', Image)
-        sub_info = message_filters.Subscriber('/detic_segmentor/segmentation_info', SegmentationInfo)
+        sub_segmentation = message_filters.Subscriber('/docker/detic_segmentor/segmentation_image', Image)
+        sub_info = message_filters.Subscriber('/docker/detic_segmentor/segmentation_info', SegmentationInfo)
         sub_list = [sub_image, sub_segmentation, sub_info]
         ts = message_filters.ApproximateTimeSynchronizer(sub_list, 100, 10.0)
         ts.registerCallback(self.callback)
