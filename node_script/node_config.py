@@ -1,9 +1,14 @@
 import os
+import sys
 from dataclasses import dataclass
 import rospy
 import rospkg
 
 import torch
+
+from detectron2.config import get_cfg
+from centernet.config import add_centernet_config
+from detic.config import add_detic_config
 
 
 @dataclass
@@ -61,3 +66,26 @@ class NodeConfig:
                 rospy.get_param('~confidence_threshold', 0.5),
                 rospy.get_param('~device', 'auto'),
                 )
+
+    def to_detectron_config(self):
+        cfg = get_cfg()
+        cfg.MODEL.DEVICE = self.device_name
+        add_centernet_config(cfg)
+        add_detic_config(cfg)
+        cfg.merge_from_file(self.detic_config_path)
+        cfg.MODEL.RETINANET.SCORE_THRESH_TEST = self.confidence_threshold
+        cfg.MODEL.ROI_HEADS.SCORE_THRESH_TEST = self.confidence_threshold
+        cfg.MODEL.PANOPTIC_FPN.COMBINE.INSTANCES_CONFIDENCE_THRESH = self.confidence_threshold
+        cfg.merge_from_list(['MODEL.WEIGHTS', self.model_weights_path])
+
+        # Similar to https://github.com/facebookresearch/Detic/demo.py
+        cfg.MODEL.ROI_BOX_HEAD.ZEROSHOT_WEIGHT_PATH = 'rand' # load later
+        cfg.MODEL.ROI_HEADS.ONE_CLASS_PER_PROPOSAL = True
+
+        # Maybe should edit detic_configs/Base-C2_L_R5021k_640b64_4x.yaml
+        pack_path = rospkg.RosPack().get_path('detic_ros')
+        cfg.MODEL.ROI_BOX_HEAD.CAT_FREQ_PATH = os.path.join(
+                pack_path, 'datasets/metadata/lvis_v1_train_cat_info.json')
+
+        cfg.freeze()
+        return cfg

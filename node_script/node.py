@@ -15,36 +15,10 @@ from detic_ros.msg import SegmentationInfo
 
 # Dirty but no way, because CenterNet2 is not package oriented
 sys.path.insert(0, os.path.join(sys.path[0], 'third_party/CenterNet2/projects/CenterNet2/'))
-from centernet.config import add_centernet_config
+
 import detic
-from detic.config import add_detic_config
 from detic.predictor import VisualizationDemo
 from node_config import NodeConfig
-
-
-def cfg_from_nodeconfig(node_config: NodeConfig, device: str):
-    assert device in ['cpu', 'cuda']
-    cfg = get_cfg()
-    cfg.MODEL.DEVICE = device
-    add_centernet_config(cfg)
-    add_detic_config(cfg)
-    cfg.merge_from_file(node_config.detic_config_path)
-    cfg.MODEL.RETINANET.SCORE_THRESH_TEST = node_config.confidence_threshold
-    cfg.MODEL.ROI_HEADS.SCORE_THRESH_TEST = node_config.confidence_threshold
-    cfg.MODEL.PANOPTIC_FPN.COMBINE.INSTANCES_CONFIDENCE_THRESH = node_config.confidence_threshold
-    cfg.merge_from_list(['MODEL.WEIGHTS', node_config.model_weights_path])
-
-    # Similar to https://github.com/facebookresearch/Detic/demo.py
-    cfg.MODEL.ROI_BOX_HEAD.ZEROSHOT_WEIGHT_PATH = 'rand' # load later
-    cfg.MODEL.ROI_HEADS.ONE_CLASS_PER_PROPOSAL = True
-
-    # Maybe should edit detic_configs/Base-C2_L_R5021k_640b64_4x.yaml
-    pack_path = rospkg.RosPack().get_path('detic_ros')
-    cfg.MODEL.ROI_BOX_HEAD.CAT_FREQ_PATH = os.path.join(
-            pack_path, 'datasets/metadata/lvis_v1_train_cat_info.json')
-
-    cfg.freeze()
-    return cfg
 
 
 class DeticRosNode:
@@ -58,7 +32,7 @@ class DeticRosNode:
     def __init__(self, node_config: Optional[NodeConfig]=None):
         if node_config is None:
             node_config = NodeConfig.from_rosparam()
-        cfg = cfg_from_nodeconfig(node_config, node_config.device_name)
+        cfg = node_config.to_detectron_config()
         dummy_args = self.DummyArgs(node_config.voabulary)
         self.predictor = VisualizationDemo(cfg, dummy_args)
 
