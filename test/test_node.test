@@ -8,9 +8,6 @@
     <param name="publish_rate" value="1" />
   </node>
 
-  <node pkg="rosbag" type="play" name="rosbag_play"
-    args="$(find detic_ros)/test/data/test.bag" output="screen" />
-
   <include file="$(find detic_ros)/launch/sample.launch" >
     <arg name="out_debug_img" value="true" />
     <arg name="out_debug_segimage" value="true" />
