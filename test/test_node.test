@@ -15,6 +15,13 @@
     <arg name="input_image" value="/image_publisher/image_raw" />
   </include>
 
+  <node pkg="detic_ros" type="masked_image_publisher.py" name="masked_image_publisher">
+    <param name="in_image" value="/image_publisher/image_raw" />
+    <param name="segmentation" value="/docker/detic_segmentor/segmentation_image" />
+    <param name="seginfo" value="/docker/detic_segmentor/segmentation_info" />
+    <param name="out_image" value="/test_out_image" />
+  </node>
+
   <test pkg="detic_ros" type="test_detic_ros_node.py" test-name="test_detic_ros_node">
   </test>
 
