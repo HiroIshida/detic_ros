@@ -28,4 +28,5 @@ generate_messages(
 if(CATKIN_ENABLE_TESTING)
   find_package(catkin REQUIRED COMPONENTS rostest)
   add_rostest(test/test_node.test)
+  add_rostest(test/test_batch_processor.test)
 endif()

@@ -16,18 +16,34 @@ from wrapper import DeticWrapper
 
 def bag_to_images(file_path: str, topic_name_extract: Optional[str] = None):
     bag = rosbag.Bag(file_path)
-    image_list: List[Image] = []
+    image_list_: List[Image] = []
 
     for topic_name, msg, t in bag.read_messages():
-        # https://github.com/ros/ros_comm/issues/769
 
         if topic_name_extract is None:
             if msg.__class__.__name__ == '_sensor_msgs__Image':
-                image_list.append(msg)
+                image_list_.append(msg)
         else:
             if topic_name == topic_name_extract:
-                image_list.append(msg)
+                image_list_.append(msg)
 
+    def deep_cast(msg):
+        # must exist etter way ... but I don't have time
+        # see:
+        # https://github.com/ros/ros_comm/issues/769
+        msg_out = Image()
+        msg_out.header.seq = msg.header.seq
+        msg_out.header.stamp = msg.header.stamp
+        msg_out.header.frame_id = msg.header.frame_id
+        msg_out.height = msg.height
+        msg_out.width = msg.width
+        msg_out.encoding = msg.encoding
+        msg_out.is_bigendian = msg.is_bigendian
+        msg_out.step = msg.step
+        msg_out.data = msg.data
+        return msg_out
+
+    image_list = [deep_cast(msg_) for msg_ in image_list_]
     return image_list
 
 
@@ -35,6 +51,7 @@ if __name__=='__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('input', type=str, help='input file path')
     parser.add_argument('-topic_name', type=str, default='', help='out file path')
+    parser.add_argument('-n', type=int, default=-1, help='number of image to be processed')
     parser.add_argument('-out', type=str, default='', help='out file path')
     parser.add_argument('-th', type=float, default=0.5, help='confidence threshold')
     parser.add_argument('-device', type=str, default='auto', help='device name')
@@ -45,6 +62,7 @@ if __name__=='__main__':
     output_file_path = args.out
     confidence_threshold = args.th
     device = args.device
+    n = args.n
 
     assert device in ['cpu', 'cuda', 'auto']
 
@@ -58,6 +76,10 @@ if __name__=='__main__':
         topic_name = None
 
     image_list = bag_to_images(input_file_path)
+
+    if n != -1:
+        image_list = image_list[:n]
+
     assert len(image_list) > 0
     print('{} images found'.format(len(image_list)))
 
