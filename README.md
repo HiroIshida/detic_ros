@@ -1,6 +1,6 @@
 ## detic_ros [![rostest](https://github.com/HiroIshida/detic_ros/actions/workflows/rostest.yml/badge.svg)](https://github.com/HiroIshida/detic_ros/actions/workflows/rostest.yml) [![docker](https://github.com/HiroIshida/detic_ros/actions/workflows/docker_build.yml/badge.svg)](https://github.com/HiroIshida/detic_ros/actions/workflows/docker_build.yml)
 
-ROS package for [Detic](https://github.com/facebookresearch/Detic). 
+ROS package for [Detic](https://github.com/facebookresearch/Detic). Run on both CPU and GPU, but using GPU is recommended for performance reason.
 
 This package is still in under active-development. [Here](https://github.com/HiroIshida/detic_ros/issues/2) is the current TODO list.
 
@@ -36,9 +36,10 @@ docker run --rm --net=host -it --gpus 1 detic_ros:latest \
     out_debug_img:=true \
     out_debug_segimg:=false \
     compressed:=false \
+    device:=auto \
     input_image:=/kinect_head/rgb/image_color'
 ```
-Change the `pr1040` part and `/kinect_head/rgb/image_color` in command above by your custom host name and an image topic. If compressed image (e.g. `/kinect_head/rgb/image_color/compressed`) corresponding to the specified `input_image` is also published, by setting `compressed:=true`, you can reduce the topic pub-sub latency.
+Change the `pr1040` part and `/kinect_head/rgb/image_color` in command above by your custom host name and an image topic. If compressed image (e.g. `/kinect_head/rgb/image_color/compressed`) corresponding to the specified `input_image` is also published, by setting `compressed:=true`, you can reduce the topic pub-sub latency. device is set to `auto` by default. But you can specify either from `cpu` or `cuda`.
 
 #### step2 (Subscribe from node in step1 and do something)
 Example for using the published topic from the node above is [masked_image_publisher.py](./example/masked_image_publisher.py). By using subscribed segmentation image and segmentation info and, this node converts a subscribed rgb image into a masked rgb image.
