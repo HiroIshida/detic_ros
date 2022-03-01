@@ -58,7 +58,7 @@ class DeticRosNode:
     def __init__(self, node_config: Optional[NodeConfig]=None):
         if node_config is None:
             node_config = NodeConfig.from_rosparam()
-        cfg = cfg_from_nodeconfig(node_config, 'cpu')
+        cfg = cfg_from_nodeconfig(node_config, node_config.device_name)
         dummy_args = self.DummyArgs(node_config.voabulary)
         self.predictor = VisualizationDemo(cfg, dummy_args)
 
