@@ -49,12 +49,10 @@ Example for using the published topic from the node above is [masked_image_publi
   - Input image
 - `~debug_image` (`sensor_msgs/Image`)
   - debug image 
-- `~segmentation_image` (`sensor_msgs/Image` with `8UC1` encoding)
-  - Segmentation image. Suppose detected class number is 14, image is filled with 0~14 uint8 values. Note that 0 means background label.
 - `~debug_segmentation_image` (`sensor_msgs/Image` with `8UC1` encoding)
   - Say detected class number is 14, `~segmentation_image` in grayscale image is almost completely dark and not good for debugging. Therefore this topic scale the value to [0 ~ 255] so that grayscale image is human-friendly.
 - `~segmentation_info` (`detic_ros/SegmentationInfo`)
-  - class name list and confidence score list corresponding to `~segmentation_image`. Note that `score` of `background` class is always 1.0
+  - class name list, confidence score list and segmentation image with `8UC1` encoding. The image is filled by 0 and positive integers indicating segmented object number. These indexes correspond to those of class name list and confidence score list. Note that index 0 is always reserved for 'background' instance and the confidence of the that instance is always 1.0.
 
 As for rosparam, see [node_cofig.py](./node_script/node_config.py).
 
