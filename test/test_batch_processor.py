@@ -13,13 +13,10 @@ class TestNode(unittest.TestCase):
 
     def test_mytest(self):
         pkg_path = rospkg.RosPack().get_path('detic_ros')
-        bag_path = os.path.join(pkg_path, 'test', 'data', 'desk.bag')
-        os.system('rosrun detic_ros batch_processer_node.py {} -n 1'.format(bag_path))
+        bag_path = os.path.join(pkg_path, 'test', 'data', 'desk.bag -out /tmp/a.pkl')
+        os.system('rosrun detic_ros batch_processor.py {} -n 1'.format(bag_path))
 
-        tmp, _ = os.path.splitext(bag_path)
-        pkl_path = tmp + '_segmented.pkl'
-
-        with open(pkl_path, 'rb') as f:
+        with open('/tmp/a.pkl', 'rb') as f:
             result_dict = pickle.load(f)
 
         assert len(result_dict['image']) == 1
