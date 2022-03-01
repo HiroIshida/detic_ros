@@ -1,0 +1,13 @@
+<launch>
+  <node name="hogehogehoge"
+        pkg="nodelet" type="nodelet"
+        args="standalone image_proc/resize"
+        respawn="true">
+    <remap from="image" to="/kinect_head/rgb/image_color" />
+    <remap from="~image" to="/resized_image_color" />
+    <rosparam>
+      scale_width: 0.35
+      scale_height: 0.466
+    </rosparam>
+  </node>
+</launch>

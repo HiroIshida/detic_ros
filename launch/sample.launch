@@ -7,6 +7,7 @@
   <arg name="confidence_threshold" default="0.5" />
   <arg name="input_image" default="input" />
   <arg name="compressed" default="true" />
+  <arg name="device" default="auto" />
 
   <arg name="_input_image" default="/$(arg namespace)/decompressed_image" if="$(arg compressed)"/>
   <arg name="_input_image" default="$(arg input_image)" unless="$(arg compressed)"/>
@@ -26,6 +27,7 @@
     <param name="out_debug_img" value="$(arg out_debug_img)"/>
     <param name="out_debug_segimage" value="$(arg out_debug_segimage)"/>
     <param name="confidence_threshold" value="$(arg confidence_threshold)"/>
+    <param name="device" value="$(arg device)"/>
     </node>
   </group>
 </launch>
