@@ -1,0 +1,33 @@
+name: RosTest
+
+on:
+    push:
+        branches:
+            - master
+    pull_request:
+        branches:
+            - master
+
+jobs:
+    build:
+        runs-on: ubuntu-latest
+        strategy:
+          matrix:
+            ros-env:
+              - ROS_DISTRO: noetic
+                BUILDER: catkin_tools_devel
+
+                BEFORE_RUN_TARGET_TEST:
+                    pip3 install torch==1.9.0+cu111 torchvision==0.10.0+cu111 torchaudio==0.9.0 -f https://download.pytorch.org/whl/torch_stable.html
+                ADDITIONAL_DEBS: |
+                    wget git
+
+        steps:
+            - name: Checkout Code
+              uses: actions/checkout@v2
+              with:
+                submodules: recursive # Checkout yamaopt as git submodule
+
+            - name: Setup ROS
+              uses: 'ros-industrial/industrial_ci@master'
+              env: ${{matrix.ros-env}}

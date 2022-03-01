@@ -1,0 +1,21 @@
+<launch>
+
+  <node pkg="image_publisher" type="image_publisher" name="image_publisher"
+      args="$(find detic_ros)/test/data/desk.jpg" >
+    <param name="flip_horizontal" value="false" />
+    <param name="flip_vertical" value="false" />
+    <param name="frame_id" value="dummy_camera" />
+    <param name="publish_rate" value="1" />
+  </node>
+
+  <include file="$(find detic_ros)/launch/sample.launch" >
+    <arg name="out_debug_img" value="true" />
+    <arg name="out_debug_segimage" value="true" />
+    <arg name="compressed" value="false" />
+    <arg name="input_image" value="/image_publisher/image_raw" />
+  </include>
+
+  <test pkg="detic_ros" type="test_detic_ros_node.py" test-name="test_detic_ros_node">
+  </test>
+
+</launch>
