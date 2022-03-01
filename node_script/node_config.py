@@ -17,11 +17,20 @@ class NodeConfig:
     confidence_threshold: float
     device_name: str
 
-    def __post_init__(self):
-        assert self.device_name in ['cpu', 'cuda']
-
     @classmethod
-    def from_rosparam(cls):
+    def from_args(cls, 
+            out_debug_img: bool = True,
+            out_debug_segimage: bool = True,
+            verbose: bool = False,
+            confidence_threshold: float = 0.5,
+            device_name: str = 'cpu',
+            ):
+
+        if device_name == 'auto':
+            device_name = 'cuda' if torch.cuda.is_available() else 'cpu'
+
+        assert device_name in ['cpu', 'cuda']
+
         pack_path = rospkg.RosPack().get_path('detic_ros')
 
         default_detic_config_path = os.path.join(
@@ -32,16 +41,23 @@ class NodeConfig:
             pack_path, 'models',
             'Detic_LCOCOI21k_CLIP_SwinB_896b32_4x_ft4x_max-size.pth')
 
-        device_name = rospy.get_param('~device', 'auto')
-        if device_name == 'auto':
-            device_name = 'cuda' if torch.cuda.is_available() else 'cpu'
-
         return cls(
+                out_debug_img,
+                out_debug_segimage,
+                verbose,
+                'lvis',
+                default_detic_config_path,
+                default_model_weights_path,
+                confidence_threshold,
+                device_name)
+
+    @classmethod
+    def from_rosparam(cls):
+
+        return cls.from_args(
                 rospy.get_param('~out_debug_img', True),
                 rospy.get_param('~out_debug_segimage', False),
-                rospy.get_param('~verbose', False),
-                rospy.get_param('~vocabulary', 'lvis'),
-                rospy.get_param('~detic_config_path', default_detic_config_path),
-                rospy.get_param('~model_weights_path', default_model_weights_path),
+                rospy.get_param('~verbose', True),
                 rospy.get_param('~confidence_threshold', 0.5),
-                device_name)
+                rospy.get_param('~device', 'auto'),
+                )
