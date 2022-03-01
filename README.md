@@ -1,4 +1,5 @@
-## detic_ros
+## detic_ros [![rostest](https://github.com/HiroIshida/detic_ros/actions/workflows/rostest.yml/badge.svg)](https://github.com/HiroIshida/detic_ros/actions/workflows/rostest.yml) [![docker](https://github.com/HiroIshida/detic_ros/actions/workflows/docker_build.yml/badge.svg)](https://github.com/HiroIshida/detic_ros/actions/workflows/docker_build.yml)
+
 ROS package for [Detic](https://github.com/facebookresearch/Detic). 
 
 This package is still in under active-development. [Here](https://github.com/HiroIshida/detic_ros/issues/2) is the current TODO list.
