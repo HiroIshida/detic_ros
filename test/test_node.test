@@ -1,0 +1,15 @@
+<launch>
+  <node pkg="rosbag" type="play" name="rosbag_play"
+    args="$(find detic_ros)/test/data/test.bag" output="screen" />
+
+  <include file="$(find detic_ros)/launch/sample.launch" >
+    <arg name="out_debug_img" value="true" />
+    <arg name="out_debug_segimage" value="true" />
+    <arg name="compressed" value="false" />
+    <arg name="input_image" value="/kinect_head/rgb/image_color" />
+  </include>
+
+  <test pkg="detic_ros" type="test_detic_ros_node.py" test-name="test_detic_ros_node">
+  </test>
+
+</launch>

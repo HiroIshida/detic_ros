@@ -15,3 +15,8 @@ generate_messages(
     DEPENDENCIES
     std_msgs
 )
+
+if(CATKIN_ENABLE_TESTING)
+  find_package(catkin REQUIRED COMPONENTS rostest)
+  add_rostest(test/test_node.test)
+endif()
