@@ -17,16 +17,15 @@ class SampleNode:
 
     def __init__(self, mask_class_name='bottle'):
         sub_image = message_filters.Subscriber(rospy.get_param('~in_image'), Image)
-        sub_segmentation = message_filters.Subscriber(rospy.get_param('~segmentation'), Image)
         sub_info = message_filters.Subscriber(rospy.get_param('~seginfo'), SegmentationInfo)
-        sub_list = [sub_image, sub_segmentation, sub_info]
+        sub_list = [sub_image, sub_info]
         ts = message_filters.ApproximateTimeSynchronizer(sub_list, 100, 10.0)
         ts.registerCallback(self.callback)
 
         self.pub = rospy.Publisher(rospy.get_param('~out_image'), Image)
         self.class_name = mask_class_name
 
-    def callback(self, msg_image, msg_segmentation, msg_info: SegmentationInfo):
+    def callback(self, msg_image, msg_info: SegmentationInfo):
         rospy.loginfo('rec messages')
 
         # find label number corresponding to desired object class name
@@ -38,12 +37,13 @@ class SampleNode:
         except ValueError:
             return
 
-        assert msg_image.width == msg_segmentation.width
-        assert msg_image.height == msg_segmentation.height
+        seg_img = msg_info.segmentation
+        assert msg_image.width == seg_img.width
+        assert msg_image.height == seg_img.height
         bridge = CvBridge()
         img = bridge.imgmsg_to_cv2(msg_image, desired_encoding='passthrough')
 
-        seg_matrix = segmentation_image_to_nparray(msg_segmentation)
+        seg_matrix = segmentation_image_to_nparray(seg_img)
         mask_indexes = np.where(seg_matrix==label_index)
 
         masked_img = copy.deepcopy(img)

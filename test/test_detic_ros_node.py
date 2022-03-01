@@ -24,12 +24,12 @@ class TestNode(unittest.TestCase):
             return all(bool_list)
 
         def cb_debug_image(msg): cb_data['msg1'] = msg
-        def cb_segimage(msg): cb_data['msg2'] = msg
+        def cb_debug_segimage(msg): cb_data['msg2'] = msg
         def cb_info(msg): cb_data['msg3'] = msg
         def cb_test_image(msg): cb_data['msg4'] = msg
 
         rospy.Subscriber('/docker/detic_segmentor/debug_image', Image, cb_debug_image)
-        rospy.Subscriber('/docker/detic_segmentor/debug_segmentation_image', Image, cb_segimage)
+        rospy.Subscriber('/docker/detic_segmentor/debug_segmentation_image', Image, cb_debug_segimage)
         rospy.Subscriber('/docker/detic_segmentor/segmentation_info', SegmentationInfo, cb_info)
         rospy.Subscriber('/test_out_image', Image, cb_test_image)
 

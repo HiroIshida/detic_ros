@@ -10,6 +10,7 @@ add_custom_target(${PROJECT_NAME}_setup_package ALL
 
 find_package(catkin REQUIRED
     std_msgs
+    sensor_msgs
     message_generation
 )
 
@@ -21,6 +22,7 @@ add_message_files(
 generate_messages(
     DEPENDENCIES
     std_msgs
+    sensor_msgs
 )
 
 if(CATKIN_ENABLE_TESTING)

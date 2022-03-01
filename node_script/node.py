@@ -67,7 +67,6 @@ class DeticRosNode:
         # https://answers.ros.org/question/220502/image-subscriber-lag-despite-queue-1/?answer=220505?answer=220505#post-id-22050://answers.ros.org/question/220502/image-subscriber-lag-despite-queue-1/?answer=220505?answer=220505#post-id-220505
         self.sub = rospy.Subscriber('~input_image', Image, self.callback, queue_size=1, buff_size=2**24)
         self.pub_debug_image = rospy.Publisher('~debug_image', Image, queue_size=1)
-        self.pub_segmentation_image = rospy.Publisher('~segmentation_image', Image, queue_size=1)
         if node_config.out_debug_segimage:
             self.pub_debug_segmentation_image = rospy.Publisher('~debug_segmentation_image', Image, queue_size=10)
 
@@ -109,7 +108,6 @@ class DeticRosNode:
         assert data.shape == (seg_img.height, seg_img.width)
         seg_img.data = data.flatten().astype(np.uint8).tolist()
         assert set(seg_img.data) == set(list(range(len(instances.pred_masks)+1)))
-        self.pub_segmentation_image.publish(seg_img)
 
         if self.node_config.out_debug_segimage:
             debug_data = copy.deepcopy(data)
@@ -127,6 +125,7 @@ class DeticRosNode:
         seginfo.detected_classes = class_names_detected
         seginfo.scores = [1.0] + instances.scores.tolist() # confidence with 1.0 about background detection
         seginfo.header = msg.header
+        seginfo.segmentation = seg_img
         self.pub_info.publish(seginfo)
 
         time_elapsed_total = (rospy.Time.now() - time_start).to_sec()
