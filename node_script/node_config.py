@@ -6,6 +6,9 @@ import rospkg
 
 import torch
 
+# Dirty but no way, because CenterNet2 is not package oriented
+sys.path.insert(0, os.path.join(sys.path[0], 'third_party/CenterNet2/projects/CenterNet2/'))
+
 from detectron2.config import get_cfg
 from centernet.config import add_centernet_config
 from detic.config import add_detic_config
