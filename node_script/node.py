@@ -22,8 +22,10 @@ from detic.predictor import VisualizationDemo
 from node_config import NodeConfig
 
 
-def cfg_from_nodeconfig(node_config: NodeConfig):
+def cfg_from_nodeconfig(node_config: NodeConfig, device: str):
+    assert device in ['cpu', 'cuda']
     cfg = get_cfg()
+    cfg.MODEL.DEVICE = device
     add_centernet_config(cfg)
     add_detic_config(cfg)
     cfg.merge_from_file(node_config.detic_config_path)
@@ -56,7 +58,7 @@ class DeticRosNode:
     def __init__(self, node_config: Optional[NodeConfig]=None):
         if node_config is None:
             node_config = NodeConfig.from_rosparam()
-        cfg = cfg_from_nodeconfig(node_config)
+        cfg = cfg_from_nodeconfig(node_config, 'cpu')
         dummy_args = self.DummyArgs(node_config.voabulary)
         self.predictor = VisualizationDemo(cfg, dummy_args)
 
