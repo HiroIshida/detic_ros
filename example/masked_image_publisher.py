@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 import copy
 import numpy as np
 import rospy
@@ -15,15 +16,14 @@ def segmentation_image_to_nparray(msg_seg):
 class SampleNode:
 
     def __init__(self, mask_class_name='bottle'):
-        image_topic_name = '/kinect_head/rgb/half/image_rect_color'
-        sub_image = message_filters.Subscriber(image_topic_name, Image)
-        sub_segmentation = message_filters.Subscriber('/docker/detic_segmentor/segmentation_image', Image)
-        sub_info = message_filters.Subscriber('/docker/detic_segmentor/segmentation_info', SegmentationInfo)
+        sub_image = message_filters.Subscriber(rospy.get_param('~in_image'), Image)
+        sub_segmentation = message_filters.Subscriber(rospy.get_param('~segmentation'), Image)
+        sub_info = message_filters.Subscriber(rospy.get_param('~seginfo'), SegmentationInfo)
         sub_list = [sub_image, sub_segmentation, sub_info]
         ts = message_filters.ApproximateTimeSynchronizer(sub_list, 100, 10.0)
         ts.registerCallback(self.callback)
 
-        self.pub = rospy.Publisher('sample_masked_image', Image)
+        self.pub = rospy.Publisher(rospy.get_param('~out_image'), Image)
         self.class_name = mask_class_name
 
     def callback(self, msg_image, msg_segmentation, msg_info: SegmentationInfo):
@@ -57,5 +57,6 @@ if __name__=='__main__':
     rospy.init_node('mask_image_publisher', anonymous=True)
     SampleNode(mask_class_name='background')
     rospy.spin()
+    pass
 
 
