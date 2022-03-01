@@ -1,12 +1,18 @@
 name: TestDockerBuild
 
 on:
+    schedule:
+        - cron: '30 1,13 * * *'
     push:
         branches:
             - master
+        paths:
+            - 'Dockerfile'
     pull_request:
         branches:
             - master
+        paths:
+            - 'Dockerfile'
 
 jobs:
   docker_build:
