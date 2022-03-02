@@ -6,9 +6,11 @@ import pickle
 
 import rosbag
 import rospy
+from cv_bridge import CvBridge
 from sensor_msgs.msg import Image
 from detic_ros.msg import SegmentationInfo
 import tqdm
+from moviepy.editor import ImageSequenceClip
 
 from node_config import NodeConfig
 from wrapper import DeticWrapper
@@ -50,7 +52,7 @@ def bag_to_images(file_path: str, topic_name_extract: Optional[str] = None):
 if __name__=='__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('input', type=str, help='input file path')
-    parser.add_argument('-topic_name', type=str, default='', help='out file path')
+    parser.add_argument('-topic', type=str, default='', help='topic name')
     parser.add_argument('-n', type=int, default=-1, help='number of image to be processed')
     parser.add_argument('-out', type=str, default='', help='out file path')
     parser.add_argument('-th', type=float, default=0.5, help='confidence threshold')
@@ -58,8 +60,8 @@ if __name__=='__main__':
 
     args = parser.parse_args()
     input_file_path = args.input
-    topic_name = args.topic_name
-    output_file_path = args.out
+    topic_name = args.topic
+    output_file_name = args.out
     confidence_threshold = args.th
     device = args.device
     n = args.n
@@ -69,13 +71,15 @@ if __name__=='__main__':
     rw, ext_input = os.path.splitext(input_file_path)
     assert ext_input == '.bag'
 
-    if output_file_path == '':
-        output_file_path = rw + '_segmented.pkl'
+    if output_file_name == '':
+        output_file_name = rw + '_segmented.pkl'
+
+    debug_file_name = rw + '_debug.gif'
 
     if topic_name == '':
         topic_name = None
 
-    image_list = bag_to_images(input_file_path)
+    image_list = bag_to_images(input_file_path, topic_name)
 
     if n != -1:
         image_list = image_list[:n]
@@ -93,5 +97,13 @@ if __name__=='__main__':
         result_dict['seginfo'].append(seginfo)
         result_dict['debug_image'].append(debug_image)
 
-    with open(output_file_path, 'wb') as f:
+
+    with open(output_file_name, 'wb') as f:
         pickle.dump(result_dict, f)
+
+    # dump debug gif image
+    bridge = CvBridge()
+    convert = lambda msg: bridge.imgmsg_to_cv2(msg, desired_encoding='passthrough')
+    images = list(map(convert, result_dict['debug_image']))
+    clip = ImageSequenceClip(images, fps=20)
+    clip.write_gif(debug_file_name, fps=20)
