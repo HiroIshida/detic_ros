@@ -7,10 +7,14 @@ This package is still in under active-development. [Here](https://github.com/Hir
 ![image](https://drive.google.com/uc?export=view&id=1aiWK51VL9pQvEKABpodRG7CkJRcjZodw)
 
 
-## Howto use
-#### Prerequisite
-`nvidia-container-toolkit` is required.
-```
+## How to running as a node
+
+### step1 (build docker container and launch Detic-segmentor node)
+*Ofcourse you can build this pacakge on your workspace and launch as normal ros package. But for those using CUDA, the following docker based approach might be safer and easy.*
+
+
+Prerequsite: You need to preinstall nvidia-container-toolkit beforehand by the following script
+```bash
 distribution=$(. /etc/os-release;echo $ID$VERSION_ID) \
    && curl -s -L https://nvidia.github.io/nvidia-docker/gpgkey | sudo apt-key add - \
    && curl -s -L https://nvidia.github.io/nvidia-docker/$distribution/nvidia-docker.list | sudo tee /etc/apt/sources.list.d/nvidia-docker.list
@@ -18,14 +22,13 @@ sudo apt update
 sudo apt install -y nvidia-container-toolkit
 sudo systemctl restart docker
 ```
-#### Building docker image
+Then build container
 ```bash
 git clone https://github.com/HiroIshida/detic_ros.git
 cd detic_ros
 docker build -t detic_ros .
 ```
 
-#### step1 (launch Detic-segmentor node)
 Example for running node on pr1040 network:
 ```bash
 docker run --rm --net=host -it --gpus 1 detic_ros:latest \
@@ -41,10 +44,10 @@ docker run --rm --net=host -it --gpus 1 detic_ros:latest \
 ```
 Change the `pr1040` part and `/kinect_head/rgb/image_color` in command above by your custom host name and an image topic. If compressed image (e.g. `/kinect_head/rgb/image_color/compressed`) corresponding to the specified `input_image` is also published, by setting `compressed:=true`, you can reduce the topic pub-sub latency. device is set to `auto` by default. But you can specify either from `cpu` or `cuda`.
 
-#### step2 (Subscribe from node in step1 and do something)
-Example for using the published topic from the node above is [masked_image_publisher.py](./example/masked_image_publisher.py). By using subscribed segmentation image and segmentation info and, this node converts a subscribed rgb image into a masked rgb image.
+### step2 (Subscribe from node in step1 and do something)
+Example for using the published topic from the node above is [masked_image_publisher.py](./example/masked_image_publisher.py). This will be helpful for understanding how to apply `SegmentationInfo` message to a image. The [test file](/test/test_node.test) for this example also might be helpful.
 
-## ROS node information
+### ROS node information
 - `~input_image` (`sensor_msgs/Image`)
   - Input image
 - `~debug_image` (`sensor_msgs/Image`)
@@ -56,3 +59,8 @@ Example for using the published topic from the node above is [masked_image_publi
 
 As for rosparam, see [node_cofig.py](./node_script/node_config.py).
 
+### Running without roscore to batch processing a bag file
+```bash
+rosrun detic_ros batch_processor.py path/to/bagfile
+```
+See [source code](/node_script/batch_processor.py) for the options.

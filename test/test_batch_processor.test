@@ -1,0 +1,4 @@
+<launch>
+  <test pkg="detic_ros" type="test_batch_processor.py" test-name="test_batch_processor">
+  </test>
+</launch>

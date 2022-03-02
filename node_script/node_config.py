@@ -31,7 +31,7 @@ class NodeConfig:
             out_debug_segimage: bool = True,
             verbose: bool = False,
             confidence_threshold: float = 0.5,
-            device_name: str = 'cpu',
+            device_name: str = 'auto',
             ):
 
         if device_name == 'auto':
