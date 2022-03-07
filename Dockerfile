@@ -11,16 +11,7 @@ RUN apt update
 # install minimum tools:
 RUN apt install -y build-essential sudo git
 
-RUN \
-  useradd user && \
-  echo "user ALL=(root) NOPASSWD:ALL" > /etc/sudoers.d/user && \
-  chmod 0440 /etc/sudoers.d/user && \
-  mkdir -p /home/user && \
-  chown user:user /home/user && \
-  chsh -s /bin/bash user
-
 RUN echo 'root:root' | chpasswd
-RUN echo 'user:user' | chpasswd
 
 # install packages
 RUN apt-get update && apt-get install -q -y --no-install-recommends \
@@ -62,9 +53,8 @@ RUN apt update && apt install python3-osrf-pycommon python3-catkin-tools -y
 RUN apt update && apt install ros-noetic-jsk-tools -y
 RUN apt update && apt install ros-noetic-image-transport-plugins -y
 
-WORKDIR /home/user
-
-USER user
+WORKDIR /root
+USER root
 CMD /bin/bash
 SHELL ["/bin/bash", "-c"]
 
