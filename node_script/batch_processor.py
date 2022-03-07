@@ -1,13 +1,16 @@
 #!/usr/bin/env python3
 import argparse
 import os
-from typing import List, Optional
 import pickle
+from numpy import inf
+from typing import List, Optional
 
 import rosbag
 import rospy
+from cv_bridge import CvBridge
 from sensor_msgs.msg import Image
 from detic_ros.msg import SegmentationInfo
+from moviepy.editor import ImageSequenceClip
 import tqdm
 
 from node_config import NodeConfig
@@ -26,6 +29,8 @@ def bag_to_images(file_path: str, topic_name_extract: Optional[str] = None):
         else:
             if topic_name == topic_name_extract:
                 image_list_.append(msg)
+
+    bag.close()
 
     def deep_cast(msg):
         # must exist etter way ... but I don't have time
@@ -47,51 +52,80 @@ def bag_to_images(file_path: str, topic_name_extract: Optional[str] = None):
     return image_list
 
 
-if __name__=='__main__':
-    parser = argparse.ArgumentParser()
-    parser.add_argument('input', type=str, help='input file path')
-    parser.add_argument('-topic_name', type=str, default='', help='out file path')
-    parser.add_argument('-n', type=int, default=-1, help='number of image to be processed')
-    parser.add_argument('-out', type=str, default='', help='out file path')
-    parser.add_argument('-th', type=float, default=0.5, help='confidence threshold')
-    parser.add_argument('-device', type=str, default='auto', help='device name')
-
-    args = parser.parse_args()
-    input_file_path = args.input
-    topic_name = args.topic_name
-    output_file_path = args.out
-    confidence_threshold = args.th
-    device = args.device
-    n = args.n
-
-    assert device in ['cpu', 'cuda', 'auto']
-
-    rw, ext_input = os.path.splitext(input_file_path)
-    assert ext_input == '.bag'
-
-    if output_file_path == '':
-        output_file_path = rw + '_segmented.pkl'
-
-    if topic_name == '':
-        topic_name = None
-
-    image_list = bag_to_images(input_file_path)
-
-    if n != -1:
-        image_list = image_list[:n]
-
-    assert len(image_list) > 0
-    print('{} images found'.format(len(image_list)))
-
-    node_config = NodeConfig.from_args(True, False, False, confidence_threshold, device)
-    detic_wrapper = DeticWrapper(node_config)
-
+def dump_result_as_pickle(results, image_list, output_file_name):
     result_dict = {'image': [], 'seginfo': [], 'debug_image': []}
-    for image in tqdm.tqdm(image_list):
+    for ((seginfo, debug_image, _), image) in zip(results, image_list):
         seginfo, debug_image, _ = detic_wrapper.infer(image)
         result_dict['image'].append(image)
         result_dict['seginfo'].append(seginfo)
         result_dict['debug_image'].append(debug_image)
 
-    with open(output_file_path, 'wb') as f:
+    with open(output_file_name, 'wb') as f:
         pickle.dump(result_dict, f)
+
+
+def dump_result_as_rosbag(input_bagfile_name, results, output_file_name):
+    bag_out = rosbag.Bag(output_file_name, 'w')
+
+    bag_inp = rosbag.Bag(input_bagfile_name)
+    (bag_out.write(*tup) for tup in bag_inp.read_messages())
+    bag_inp.close()
+
+    for seginfo, debug_image, _ in results:
+        bag_out.write('/detic_segmentor/segmentation_info', seginfo, seginfo.header.stamp)
+        bag_out.write('/detic_segmentor/debug_image', debug_image, debug_image.header.stamp)
+    bag_out.close()
+
+
+if __name__=='__main__':
+    parser = argparse.ArgumentParser()
+    parser.add_argument('input', type=str, help='input file path')
+    parser.add_argument('-topic', type=str, default='', help='topic name')
+    parser.add_argument('-n', type=int, default=-1, help='number of image to be processed')
+    parser.add_argument('-out', type=str, default='', help='out file path')
+    parser.add_argument('-format', type=str, default='pkl', help='out file format')
+    parser.add_argument('-th', type=float, default=0.5, help='confidence threshold')
+    parser.add_argument('-device', type=str, default='auto', help='device name')
+
+    args = parser.parse_args()
+    input_file_path = args.input
+    topic_name = args.topic
+    output_file_name = args.out
+    output_format = args.format
+    confidence_threshold = args.th
+    device = args.device
+    n = args.n
+
+    assert device in ['cpu', 'cuda', 'auto']
+    assert output_format in ['bag', 'pkl']
+
+    rw, ext_input = os.path.splitext(input_file_path)
+    assert ext_input == '.bag'
+
+    if output_file_name == '':
+        output_file_name = rw + '_segmented.' + output_format
+    debug_file_name = rw + '_debug.gif'
+
+    topic_name = None if topic_name == '' else topic_name
+    image_list = bag_to_images(input_file_path, topic_name)
+
+    image_list = image_list if n == -1 else image_list[:n]
+    assert len(image_list) > 0
+    print('{} images found'.format(len(image_list)))
+
+    node_config = NodeConfig.from_args(True, False, False, confidence_threshold, device)
+    detic_wrapper = DeticWrapper(node_config)
+    results = [detic_wrapper.infer(image) for image in tqdm.tqdm(image_list)]
+
+    if output_format == 'pkl':
+        dump_result_as_pickle(results, image_list, output_file_name)
+    elif output_format == 'bag':
+        dump_result_as_rosbag(input_file_path, results, output_file_name)
+
+    # dump debug gif image
+    bridge = CvBridge()
+    convert = lambda msg: bridge.imgmsg_to_cv2(msg, desired_encoding='passthrough')
+    debug_iamges = [result[1] for result in results]
+    images = list(map(convert, debug_iamges))
+    clip = ImageSequenceClip(images, fps=20)
+    clip.write_gif(debug_file_name, fps=20)
