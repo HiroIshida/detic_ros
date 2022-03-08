@@ -68,7 +68,8 @@ def dump_result_as_rosbag(input_bagfile_name, results, output_file_name):
     bag_out = rosbag.Bag(output_file_name, 'w')
 
     bag_inp = rosbag.Bag(input_bagfile_name)
-    (bag_out.write(*tup) for tup in bag_inp.read_messages())
+    for topic_name, msg, t in bag_inp.read_messages():
+        bag_out.write(topic_name, msg, t)
     bag_inp.close()
 
     for seginfo, debug_image, _ in results:
