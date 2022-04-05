@@ -16,6 +16,7 @@ from detic.config import add_detic_config
 
 @dataclass
 class NodeConfig:
+    enable_pubsub: bool
     out_debug_img: bool
     out_debug_segimage: bool
     verbose: bool
@@ -28,6 +29,7 @@ class NodeConfig:
 
     @classmethod
     def from_args(cls, 
+            enable_pubsub: bool = True,
             out_debug_img: bool = True,
             out_debug_segimage: bool = True,
             verbose: bool = False,
@@ -53,6 +55,7 @@ class NodeConfig:
             'Detic_LCOCOI21k_CLIP_SwinB_896b32_4x_ft4x_max-size.pth')
 
         return cls(
+                enable_pubsub,
                 out_debug_img,
                 out_debug_segimage,
                 verbose,
@@ -67,6 +70,7 @@ class NodeConfig:
     def from_rosparam(cls):
 
         return cls.from_args(
+                rospy.get_param('~enable_pubsub', True),
                 rospy.get_param('~out_debug_img', True),
                 rospy.get_param('~out_debug_segimage', False),
                 rospy.get_param('~verbose', True),
