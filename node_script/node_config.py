@@ -34,7 +34,7 @@ class NodeConfig:
             confidence_threshold: float = 0.5,
             device_name: str = 'auto',
             vocabulary: str = 'lvis',
-            custom_vocabulary, str = '',
+            custom_vocabulary: str = '',
             ):
 
         if device_name == 'auto':
