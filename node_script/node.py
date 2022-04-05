@@ -24,11 +24,11 @@ class DeticRosNode:
 
         self.detic_wrapper = DeticWrapper(node_config)
 
-        # As for large buff_size please see:
-        # https://answers.ros.org/question/220502/image-subscriber-lag-despite-queue-1/?answer=220505?answer=220505#post-id-22050://answers.ros.org/question/220502/image-subscriber-lag-despite-queue-1/?answer=220505?answer=220505#post-id-220505
         self.srv_handler = rospy.Service('~segment_image', DeticSeg, self.callback_srv)
 
         if node_config.enable_pubsub:
+            # As for large buff_size please see:
+            # https://answers.ros.org/question/220502/image-subscriber-lag-despite-queue-1/?answer=220505?answer=220505#post-id-22050://answers.ros.org/question/220502/image-subscriber-lag-despite-queue-1/?answer=220505?answer=220505#post-id-220505
             self.sub = rospy.Subscriber('~input_image', Image, self.callback_image, queue_size=1, buff_size=2**24)
             self.pub_debug_image = rospy.Publisher('~debug_image', Image, queue_size=1)
             self.pub_debug_segmentation_image = rospy.Publisher('~debug_segmentation_image', Image, queue_size=10)
