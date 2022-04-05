@@ -8,6 +8,8 @@
   <arg name="input_image" default="input" />
   <arg name="compressed" default="true" />
   <arg name="device" default="auto" />
+  <arg name="vocabulary" default="lvis" />
+  <arg name="custom_vocabulary" default="" />
 
   <arg name="_input_image" default="/$(arg namespace)/decompressed_image" if="$(arg compressed)"/>
   <arg name="_input_image" default="$(arg input_image)" unless="$(arg compressed)"/>
@@ -28,6 +30,8 @@
     <param name="out_debug_segimage" value="$(arg out_debug_segimage)"/>
     <param name="confidence_threshold" value="$(arg confidence_threshold)"/>
     <param name="device" value="$(arg device)"/>
+    <param name="vocabulary" value="$(arg vocabulary)" />
+    <param name="custom_vocabulary" value="$(arg custom_vocabulary)" />
     </node>
   </group>
 </launch>
