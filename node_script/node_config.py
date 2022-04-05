@@ -54,6 +54,9 @@ class NodeConfig:
             pack_path, 'models',
             'Detic_LCOCOI21k_CLIP_SwinB_896b32_4x_ft4x_max-size.pth')
 
+        message = 'custom vocab must be without whitespace. e.g. \'foo,bar\' instead of \'foo, bar\''
+        assert not ' ' in custom_vocabulary, message
+
         return cls(
                 enable_pubsub,
                 out_debug_img,
