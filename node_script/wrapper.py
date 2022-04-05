@@ -28,7 +28,7 @@ class DeticWrapper:
     def __init__(self, node_config: NodeConfig):
         self._adhoc_hack_metadata_path()
         detectron_cfg = node_config.to_detectron_config()
-        dummy_args = self.DummyArgs(node_config.voabulary)
+        dummy_args = self.DummyArgs(node_config.vocabulary)
 
         self.predictor = VisualizationDemo(detectron_cfg, dummy_args)
         self.node_config = node_config

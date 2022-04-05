@@ -19,7 +19,7 @@ class NodeConfig:
     out_debug_img: bool
     out_debug_segimage: bool
     verbose: bool
-    voabulary: str
+    vocabulary: str
     detic_config_path: str
     model_weights_path: str
     confidence_threshold: float
