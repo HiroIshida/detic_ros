@@ -1,0 +1,4 @@
+sensor_msgs/Image image
+---
+detic_ros/SegmentationInfo seg_info
+sensor_msgs/Image debug_image
