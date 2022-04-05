@@ -20,6 +20,7 @@ class NodeConfig:
     out_debug_segimage: bool
     verbose: bool
     vocabulary: str
+    custom_vocabulary: str
     detic_config_path: str
     model_weights_path: str
     confidence_threshold: float
@@ -32,6 +33,8 @@ class NodeConfig:
             verbose: bool = False,
             confidence_threshold: float = 0.5,
             device_name: str = 'auto',
+            vocabulary: str = 'lvis',
+            custom_vocabulary: str = '',
             ):
 
         if device_name == 'auto':
@@ -53,7 +56,8 @@ class NodeConfig:
                 out_debug_img,
                 out_debug_segimage,
                 verbose,
-                'lvis',
+                vocabulary,
+                custom_vocabulary,
                 default_detic_config_path,
                 default_model_weights_path,
                 confidence_threshold,
@@ -68,6 +72,8 @@ class NodeConfig:
                 rospy.get_param('~verbose', True),
                 rospy.get_param('~confidence_threshold', 0.5),
                 rospy.get_param('~device', 'auto'),
+                rospy.get_param('~vocabulary', 'lvis'),
+                rospy.get_param('~custom_vocabulary', ''),
                 )
 
     def to_detectron_config(self):
