@@ -76,10 +76,10 @@ RUN mkdir -p ~/detic_ws/src
 RUN cd ~/detic_ws/src && git clone https://github.com/HiroIshida/detic_ros.git
 RUN cd ~/detic_ws/src/detic_ros && pip3 install -r requirements.txt
 RUN sudo apt install -y wget
-RUN cd ~/detic_ws/src/detic_ros && ./prepare.sh
 RUN sudo rosdep init && rosdep update
 RUN cd ~/detic_ws/src/detic_ros && source /opt/ros/noetic/setup.bash && rosdep install --from-paths . -i -r -y
 RUN cd ~/detic_ws && source /opt/ros/noetic/setup.bash && catkin build
+RUN cd ~/detic_ws/src/detic_ros && ./prepare.sh
 
 RUN touch ~/.bashrc
 RUN echo "source ~/detic_ws/devel/setup.bash" >> ~/.bashrc
