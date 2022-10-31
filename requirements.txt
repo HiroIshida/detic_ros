@@ -2,13 +2,13 @@
 detectron2
 
 # Copied from Detic
-opencv-python
-timm
-dataclasses
-ftfy
-regex
-fasttext
-scikit-learn
-lvis
-nltk
+opencv-python==4.5.5.62
+timm==0.5.4
+dataclasses==0.6
+ftfy==6.0.3
+regex==2022.1.18
+fasttext==0.9.2
+scikit-learn==1.0.2
+lvis==0.5.3
+nltk==3.6.7
 git+https://github.com/openai/CLIP.git
