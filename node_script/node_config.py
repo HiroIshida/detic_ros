@@ -13,6 +13,8 @@ from detectron2.config import get_cfg
 from centernet.config import add_centernet_config
 from detic.config import add_detic_config
 
+# model_name = 'Detic_LCOCOI21k_CLIP_SwinB_896b32_4x_ft4x_max-size'
+model_name = 'Detic_LCOCOI21k_CLIP_CXT21k_640b32_4x_ft4x_max-size'
 
 @dataclass
 class NodeConfig:
@@ -47,12 +49,12 @@ class NodeConfig:
         pack_path = rospkg.RosPack().get_path('detic_ros')
 
         default_detic_config_path = os.path.join(
-            pack_path, 'detic_configs', 
-            'Detic_LCOCOI21k_CLIP_SwinB_896b32_4x_ft4x_max-size.yaml')
+            pack_path, 'detic_configs',
+            model_name + '.yaml')
 
         default_model_weights_path = os.path.join(
             pack_path, 'models',
-            'Detic_LCOCOI21k_CLIP_SwinB_896b32_4x_ft4x_max-size.pth')
+            model_name + '.pth')
 
         return cls(
                 enable_pubsub,
