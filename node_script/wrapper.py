@@ -33,6 +33,10 @@ class DeticWrapper:
 
         self.predictor = VisualizationDemo(detectron_cfg, dummy_args)
         self.node_config = node_config
+        self.bridge = CvBridge()
+        self.class_names = self.predictor.metadata.get("thing_classes", None)
+        self.seg_info = SegmentationInfo()
+        self.seg_img = None
 
     @staticmethod
     def _adhoc_hack_metadata_path():
@@ -45,8 +49,7 @@ class DeticWrapper:
 
 
     def infer(self, msg: Image) -> Tuple[SegmentationInfo, Optional[Image], Optional[Image]]:
-        bridge = CvBridge()
-        img = bridge.imgmsg_to_cv2(msg, desired_encoding='passthrough')
+        img = self.bridge.imgmsg_to_cv2(msg, desired_encoding='passthrough')
 
         if self.node_config.verbose:
             time_start = rospy.Time.now()
@@ -64,18 +67,20 @@ class DeticWrapper:
 
         # Create debug image
         if self.node_config.out_debug_img:
-            debug_img = bridge.cv2_to_imgmsg(visualized_output.get_image(), encoding="rgb8")
+            debug_img = self.bridge.cv2_to_imgmsg(visualized_output.get_image(),
+                                                  encoding="rgb8")
             debug_img.header = msg.header
         else:
             debug_img = None
 
         # Create Image containing segmentation info
-        seg_img = Image(height=img.shape[0], width=img.shape[1])
-        seg_img.header = msg.header
-        seg_img.encoding = '8UC1' # TODO(HiroIshida) are 256 classes enough??
-        seg_img.is_bigendian = 0
-        seg_img.step = seg_img.width * 1
-        data = np.zeros((seg_img.height, seg_img.width)).astype(np.uint8)
+        if self.seg_img is None:
+            self.seg_img = Image(height=img.shape[0], width=img.shape[1])
+            self.seg_img.header = msg.header
+            self.seg_img.encoding = '8UC1' # TODO(HiroIshida) are 256 classes enough??
+            self.seg_img.is_bigendian = 0
+            self.seg_img.step = self.seg_img.width * 1
+        data = np.zeros((self.seg_img.height, self.seg_img.width), dtype=np.uint8)
 
         # largest to smallest order to reduce occlusion.
         sorted_index = np.argsort([-mask.sum() for mask in instances.pred_masks])
@@ -83,28 +88,25 @@ class DeticWrapper:
             mask = instances.pred_masks[i]
             # lable 0 is reserved for background label, so starting from 1
             data[mask] = (i + 1)
-        assert data.shape == (seg_img.height, seg_img.width)
-        seg_img.data = data.flatten().astype(np.uint8).tolist()
-        assert set(seg_img.data) == set(list(range(len(instances.pred_masks)+1)))
+        self.seg_img.data = data.flatten().astype(np.uint8).tolist()
+        # assert set(self.seg_img.data) == set(list(range(len(instances.pred_masks)+1)))
 
         if self.node_config.out_debug_segimage:
             debug_data = copy.deepcopy(data)
             human_friendly_scaling = 256//(len(instances.pred_masks) + 1)
             debug_data = debug_data * human_friendly_scaling
-            debug_seg_img = copy.deepcopy(seg_img)
+            debug_seg_img = copy.deepcopy(self.seg_img)
             debug_seg_img.data = debug_data.flatten().astype(np.uint8).tolist()
         else:
             debug_seg_img = None
 
         # Create segmentation info message
-        class_names = self.predictor.metadata.get("thing_classes", None)
         class_indexes = instances.pred_classes.tolist()
-        class_names_detected = ['background'] + [class_names[i] for i in class_indexes]
-        seginfo = SegmentationInfo()
-        seginfo.detected_classes = class_names_detected
-        seginfo.scores = [1.0] + instances.scores.tolist() # confidence with 1.0 about background detection
-        seginfo.header = msg.header
-        seginfo.segmentation = seg_img
+        class_names_detected = ['background'] + [self.class_names[i] for i in class_indexes]
+        self.seg_info.detected_classes = class_names_detected
+        self.seg_info.scores = [1.0] + instances.scores.tolist() # confidence with 1.0 about background detection
+        self.seg_info.header = msg.header
+        self.seg_info.segmentation = self.seg_img
 
         if self.node_config.verbose:
             time_elapsed_total = (rospy.Time.now() - time_start).to_sec()
@@ -113,4 +115,4 @@ class DeticWrapper:
             total_publication_delay = (rospy.Time.now() - msg.header.stamp).to_sec()
             responsibility = (time_elapsed_total / total_publication_delay) * 100.0
             rospy.loginfo('total delay {} sec (this cb {} %)'.format(total_publication_delay, responsibility))
-        return seginfo, debug_img, debug_seg_img
+        return self.seg_info, debug_img, debug_seg_img
