@@ -1,17 +1,21 @@
 import os
 import copy
-from typing import Optional, Tuple
+from typing import Optional, Tuple, List
 
 import rospy
 import rospkg
 from cv_bridge import CvBridge
 from sensor_msgs.msg import Image
 from detic_ros.msg import SegmentationInfo
+
+
 import torch
 import numpy as np
 
 import detic
 from detic.predictor import VisualizationDemo
+from jsk_recognition_msgs.msg import Label, LabelArray, VectorArray
+from detectron2.utils.visualizer import VisImage
 from node_config import NodeConfig
 
 
@@ -35,7 +39,6 @@ class DeticWrapper:
         self.node_config = node_config
         self.bridge = CvBridge()
         self.class_names = self.predictor.metadata.get("thing_classes", None)
-        self.seg_info = SegmentationInfo()
         self.seg_img = None
 
     @staticmethod
@@ -47,8 +50,8 @@ class DeticWrapper:
         for key in  path_dict.keys():
             path_dict[key] = os.path.join(pack_path, path_dict[key])
 
-
-    def infer(self, msg: Image) -> Tuple[SegmentationInfo, Optional[Image], Optional[Image]]:
+    def infer(self, msg: Image) -> Tuple[Image, List[str], List[float], Optional[VisImage]]:
+        # Segmentation image, detected classes, detection scores, visualization image
         img = self.bridge.imgmsg_to_cv2(msg, desired_encoding='passthrough')
 
         if self.node_config.verbose:
@@ -58,20 +61,13 @@ class DeticWrapper:
             predictions, visualized_output = self.predictor.run_on_image(img)
         else:
             predictions = self.predictor.predictor(img)
+            visualized_output = None
         instances = predictions['instances'].to(torch.device("cpu"))
 
         if self.node_config.verbose:
             time_elapsed = (rospy.Time.now() - time_start).to_sec()
             rospy.loginfo('elapsed time to inference {}'.format(time_elapsed))
             rospy.loginfo('detected {} classes'.format(len(instances)))
-
-        # Create debug image
-        if self.node_config.out_debug_img:
-            debug_img = self.bridge.cv2_to_imgmsg(visualized_output.get_image(),
-                                                  encoding="rgb8")
-            debug_img.header = msg.header
-        else:
-            debug_img = None
 
         # Create Image containing segmentation info
         if self.seg_img is None:
@@ -91,28 +87,42 @@ class DeticWrapper:
         self.seg_img.data = data.flatten().astype(np.uint8).tolist()
         # assert set(self.seg_img.data) == set(list(range(len(instances.pred_masks)+1)))
 
-        if self.node_config.out_debug_segimg:
-            debug_data = copy.deepcopy(data)
-            human_friendly_scaling = 256//(len(instances.pred_masks) + 1)
-            debug_data = debug_data * human_friendly_scaling
-            debug_seg_img = copy.deepcopy(self.seg_img)
-            debug_seg_img.data = debug_data.flatten().astype(np.uint8).tolist()
-        else:
-            debug_seg_img = None
-
-        # Create segmentation info message
+        # Get class and score arrays
         class_indexes = instances.pred_classes.tolist()
         class_names_detected = ['background'] + [self.class_names[i] for i in class_indexes]
-        self.seg_info.detected_classes = class_names_detected
-        self.seg_info.scores = [1.0] + instances.scores.tolist() # confidence with 1.0 about background detection
-        self.seg_info.header = msg.header
-        self.seg_info.segmentation = self.seg_img
+        scores = [1.0] + instances.scores.tolist() # confidence with 1.0 about background detection
+        return self.seg_img, class_names_detected, scores, visualized_output
 
-        if self.node_config.verbose:
-            time_elapsed_total = (rospy.Time.now() - time_start).to_sec()
-            rospy.loginfo('total elapsed time in callback {}'.format(time_elapsed_total))
+    def get_debug_img(self, visualized_output: VisImage) -> Image:
+        # Call after infer
+        debug_img = self.bridge.cv2_to_imgmsg(visualized_output.get_image(),
+                                              encoding="rgb8")
+        debug_img.header = self.seg_img.header
+        return debug_img
 
-            total_publication_delay = (rospy.Time.now() - msg.header.stamp).to_sec()
-            responsibility = (time_elapsed_total / total_publication_delay) * 100.0
-            rospy.loginfo('total delay {} sec (this cb {} %)'.format(total_publication_delay, responsibility))
-        return self.seg_info, debug_img, debug_seg_img
+    def get_debug_segimg(self) -> Image:
+        # Call after infer
+        debug_seg_img = copy.deepcopy(self.seg_img)
+        human_friendly_scaling = 255 // debug_seg_img.data.max()
+        debug_seg_img.data *= human_friendly_scaling
+        return debug_seg_img
+
+    def get_segmentation_info(self, detected_classes: List[str],
+                              scores: List[float]) -> SegmentationInfo:
+        seg_info = SegmentationInfo(detected_classes=detected_classes,
+                                    scores=scores,
+                                    segmentation=self.seg_img,
+                                    header=self.seg_img.header)
+        return seg_info
+
+    def get_label_array(self, detected_classes: List[str]) -> LabelArray:
+        labels = [Label(id=i, name=cls) for i,cls in enumerate(detected_classes)]
+        lab_arr = LabelArray(header=self.seg_img.header,
+                             labels=labels)
+        return lab_arr
+
+    def get_score_array(self, scores: List[float]) -> VectorArray:
+        vec_arr = VectorArray(header=self.seg_img.header,
+                              vector_dim=len(scores),
+                              data=scores)
+        return vec_arr

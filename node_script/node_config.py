@@ -20,6 +20,7 @@ class NodeConfig:
     out_debug_img: bool
     out_debug_segimg: bool
     verbose: bool
+    use_jsk_msgs: bool
     vocabulary: str
     custom_vocabulary: str
     detic_config_path: str
@@ -41,6 +42,7 @@ class NodeConfig:
             out_debug_img: bool = True,
             out_debug_segimg: bool = True,
             verbose: bool = False,
+            use_jsk_msgs: bool = False,
             confidence_threshold: float = 0.5,
             device_name: str = 'auto',
             vocabulary: str = 'lvis',
@@ -69,6 +71,7 @@ class NodeConfig:
                 out_debug_img,
                 out_debug_segimg,
                 verbose,
+                use_jsk_msgs,
                 vocabulary,
                 custom_vocabulary,
                 default_detic_config_path,
@@ -85,6 +88,7 @@ class NodeConfig:
                 rospy.get_param('~out_debug_img', True),
                 rospy.get_param('~out_debug_segimg', False),
                 rospy.get_param('~verbose', True),
+                rospy.get_param('~use_jsk_msgs', False),
                 rospy.get_param('~confidence_threshold', 0.5),
                 rospy.get_param('~device', 'auto'),
                 rospy.get_param('~vocabulary', 'lvis'),

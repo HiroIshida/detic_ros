@@ -116,7 +116,7 @@ if __name__=='__main__':
     assert len(image_list) > 0
     print('{} images found'.format(len(image_list)))
 
-    node_config = NodeConfig.from_args(model_type, True, False, False,
+    node_config = NodeConfig.from_args(model_type, True, False, False, False,
                                        confidence_threshold, device)
     detic_wrapper = DeticWrapper(node_config)
     results = [detic_wrapper.infer(image) for image in tqdm.tqdm(image_list)]
