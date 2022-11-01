@@ -10,7 +10,7 @@
 
   <include file="$(find detic_ros)/launch/sample.launch" >
     <arg name="out_debug_img" value="true" />
-    <arg name="out_debug_segimage" value="true" />
+    <arg name="out_debug_segimg" value="true" />
     <arg name="compressed" value="false" />
     <arg name="input_image" value="/image_publisher/image_raw" />
   </include>

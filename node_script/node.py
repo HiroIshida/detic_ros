@@ -36,7 +36,7 @@ class DeticRosNode:
                 self.pub_debug_image = rospy.Publisher('~debug_image', Image, queue_size=1)
             else:
                 self.pub_debug_image = None
-            if node_config.out_debug_segimage:
+            if node_config.out_debug_segimg:
                 self.pub_debug_segmentation_image = rospy.Publisher('~debug_segmentation_image',
                                                                     Image, queue_size=10)
             else:

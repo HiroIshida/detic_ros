@@ -91,7 +91,7 @@ class DeticWrapper:
         self.seg_img.data = data.flatten().astype(np.uint8).tolist()
         # assert set(self.seg_img.data) == set(list(range(len(instances.pred_masks)+1)))
 
-        if self.node_config.out_debug_segimage:
+        if self.node_config.out_debug_segimg:
             debug_data = copy.deepcopy(data)
             human_friendly_scaling = 256//(len(instances.pred_masks) + 1)
             debug_data = debug_data * human_friendly_scaling

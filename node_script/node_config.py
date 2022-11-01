@@ -18,7 +18,7 @@ from detic.config import add_detic_config
 class NodeConfig:
     enable_pubsub: bool
     out_debug_img: bool
-    out_debug_segimage: bool
+    out_debug_segimg: bool
     verbose: bool
     vocabulary: str
     custom_vocabulary: str
@@ -31,7 +31,7 @@ class NodeConfig:
     def from_args(cls, 
             enable_pubsub: bool = True,
             out_debug_img: bool = True,
-            out_debug_segimage: bool = True,
+            out_debug_segimg: bool = True,
             verbose: bool = False,
             confidence_threshold: float = 0.5,
             device_name: str = 'auto',
@@ -57,7 +57,7 @@ class NodeConfig:
         return cls(
                 enable_pubsub,
                 out_debug_img,
-                out_debug_segimage,
+                out_debug_segimg,
                 verbose,
                 vocabulary,
                 custom_vocabulary,
@@ -72,7 +72,7 @@ class NodeConfig:
         return cls.from_args(
                 rospy.get_param('~enable_pubsub', True),
                 rospy.get_param('~out_debug_img', True),
-                rospy.get_param('~out_debug_segimage', False),
+                rospy.get_param('~out_debug_segimg', False),
                 rospy.get_param('~verbose', True),
                 rospy.get_param('~confidence_threshold', 0.5),
                 rospy.get_param('~device', 'auto'),
