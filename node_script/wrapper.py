@@ -51,7 +51,10 @@ class DeticWrapper:
         if self.node_config.verbose:
             time_start = rospy.Time.now()
 
-        predictions, visualized_output = self.predictor.run_on_image(img)
+        if self.node_config.out_debug_img:
+            predictions, visualized_output = self.predictor.run_on_image(img)
+        else:
+            predictions = self.predictor.predictor(img)
         instances = predictions['instances'].to(torch.device("cpu"))
 
         if self.node_config.verbose:
