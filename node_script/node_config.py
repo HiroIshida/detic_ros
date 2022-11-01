@@ -15,6 +15,7 @@ from detic.config import add_detic_config
 
 # model_name = 'Detic_LCOCOI21k_CLIP_SwinB_896b32_4x_ft4x_max-size'
 model_name = 'Detic_LCOCOI21k_CLIP_CXT21k_640b32_4x_ft4x_max-size'
+# model_name = 'Detic_LCOCOI21k_CLIP_R18_640b32_4x_ft4x_max-size'
 
 @dataclass
 class NodeConfig:
