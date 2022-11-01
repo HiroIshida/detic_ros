@@ -13,9 +13,6 @@ from detectron2.config import get_cfg
 from centernet.config import add_centernet_config
 from detic.config import add_detic_config
 
-# model_name = 'Detic_LCOCOI21k_CLIP_SwinB_896b32_4x_ft4x_max-size'
-model_name = 'Detic_LCOCOI21k_CLIP_CXT21k_640b32_4x_ft4x_max-size'
-# model_name = 'Detic_LCOCOI21k_CLIP_R18_640b32_4x_ft4x_max-size'
 
 @dataclass
 class NodeConfig:
@@ -30,8 +27,16 @@ class NodeConfig:
     confidence_threshold: float
     device_name: str
 
+    model_names = {
+        'swin': 'Detic_LCOCOI21k_CLIP_SwinB_896b32_4x_ft4x_max-size',
+        'convnet': 'Detic_LCOCOI21k_CLIP_CXT21k_640b32_4x_ft4x_max-size',
+        'res50': 'Detic_LCOCOI21k_CLIP_R5021k_640b32_4x_ft4x_max-size',
+        'res18': 'Detic_LCOCOI21k_CLIP_R18_640b32_4x_ft4x_max-size',
+    }
+
     @classmethod
     def from_args(cls, 
+            model_type: str = 'swin',
             enable_pubsub: bool = True,
             out_debug_img: bool = True,
             out_debug_segimg: bool = True,
@@ -46,9 +51,11 @@ class NodeConfig:
             device_name = 'cuda' if torch.cuda.is_available() else 'cpu'
 
         assert device_name in ['cpu', 'cuda']
+        assert model_type in NodeConfig.model_names
 
         pack_path = rospkg.RosPack().get_path('detic_ros')
 
+        model_name = NodeConfig.model_names[model_type]
         default_detic_config_path = os.path.join(
             pack_path, 'detic_configs',
             model_name + '.yaml')
@@ -73,6 +80,7 @@ class NodeConfig:
     def from_rosparam(cls):
 
         return cls.from_args(
+                rospy.get_param('~model_type', 'swin'),
                 rospy.get_param('~enable_pubsub', True),
                 rospy.get_param('~out_debug_img', True),
                 rospy.get_param('~out_debug_segimg', False),

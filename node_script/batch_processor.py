@@ -81,6 +81,7 @@ def dump_result_as_rosbag(input_bagfile_name, results, output_file_name):
 if __name__=='__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('input', type=str, help='input file path')
+    parser.add_argument('-model', type=str, default='swin', help='model type')
     parser.add_argument('-topic', type=str, default='', help='topic name')
     parser.add_argument('-n', type=int, default=-1, help='number of image to be processed')
     parser.add_argument('-out', type=str, default='', help='out file path')
@@ -90,6 +91,7 @@ if __name__=='__main__':
 
     args = parser.parse_args()
     input_file_path = args.input
+    model_type = args.model
     topic_name = args.topic
     output_file_name = args.out
     output_format = args.format
@@ -114,7 +116,8 @@ if __name__=='__main__':
     assert len(image_list) > 0
     print('{} images found'.format(len(image_list)))
 
-    node_config = NodeConfig.from_args(True, False, False, confidence_threshold, device)
+    node_config = NodeConfig.from_args(model_type, True, False, False,
+                                       confidence_threshold, device)
     detic_wrapper = DeticWrapper(node_config)
     results = [detic_wrapper.infer(image) for image in tqdm.tqdm(image_list)]
 
