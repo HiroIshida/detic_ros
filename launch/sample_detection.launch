@@ -52,15 +52,27 @@
       <remap from="~output" to="detic_segmentor/indices"/>
     </node>
 
+    <node name="detic_euclidean_clustering"
+          pkg="nodelet" type="nodelet"
+          args="load jsk_pcl/EuclideanClustering $(arg MANAGER)"
+          clear_params="true">
+      <remap from="~input" to="depth_registered/points"/>
+      <remap from="~input/cluster_indices" to="detic_segmentor/indices"/>
+      <rosparam>
+        multi: true
+        downsample_enable: true
+      </rosparam>
+    </node>
+
     <node name="detic_cluster_point_indices_decomposer"
           pkg="nodelet" type="nodelet"
           args="load jsk_pcl/ClusterPointIndicesDecomposer $(arg MANAGER)"
           clear_params="true">
       <remap from="~input" to="depth_registered/points"/>
-      <remap from="~target" to="detic_segmentor/indices"/>
+      <remap from="~target" to="detic_euclidean_clustering/output"/>
       <remap from="~boxes" to="detic_segmentor/output/boxes"/>
       <remap from="~centroid_pose_array" to="detic_segmentor/output/centroid"/>
-      <rosparam subst_value="true">
+      <rosparam>
         align_boxes: true
         align_boxes_with_plane: false
         force_to_flip_z_axis: false
