@@ -40,6 +40,13 @@ class DeticWrapper:
         self.class_names = self.predictor.metadata.get("thing_classes", None)
         self.header = None
         self.data = None
+        self.idx = None
+
+        if node_config.vocabulary == 'custom':
+            self.idx = {'background': 0}
+            for i,name in enumerate(node_config.custom_vocabulary.split(',')):
+                self.idx[name] = i+1
+
 
     @staticmethod
     def _adhoc_hack_metadata_path():
@@ -114,7 +121,10 @@ class DeticWrapper:
         return seg_info
 
     def get_label_array(self, detected_classes: List[str]) -> LabelArray:
-        labels = [Label(id=i, name=cls) for i,cls in enumerate(detected_classes)]
+        if self.idx is None:
+            labels = [Label(id=i, name=cls) for i,cls in enumerate(detected_classes)]
+        else:
+            labels = [Label(id=self.idx[cls], name=cls) for i,cls in enumerate(detected_classes)]
         lab_arr = LabelArray(header=self.header,
                              labels=labels)
         return lab_arr
