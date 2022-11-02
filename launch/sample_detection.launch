@@ -60,7 +60,12 @@
       <remap from="~input/cluster_indices" to="detic_segmentor/indices"/>
       <rosparam>
         multi: true
+        tolerance: 0.03
+        min_size: 10
         downsample_enable: true
+        cluster_filter: 1
+        approximate_sync: true
+        queue_size: 100
       </rosparam>
     </node>
 
@@ -76,7 +81,10 @@
         align_boxes: true
         align_boxes_with_plane: false
         force_to_flip_z_axis: false
+        use_pca: false
         target_frame_id: base_footprint
+        approximate_sync: true
+        queue_size: 100
       </rosparam>
     </node>
 
