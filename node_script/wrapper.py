@@ -92,8 +92,8 @@ class DeticWrapper:
 
         # Get class and score arrays
         class_indexes = instances.pred_classes.tolist()
-        class_names_detected = ['background'] + [self.class_names[i] for i in class_indexes]
-        scores = [1.0] + instances.scores.tolist() # confidence with 1.0 about background detection
+        class_names_detected = [self.class_names[i] for i in class_indexes]
+        scores = instances.scores.tolist()
         return seg_img, class_names_detected, scores, visualized_output
 
     def get_debug_img(self, visualized_output: VisImage) -> Image:
@@ -122,7 +122,7 @@ class DeticWrapper:
 
     def get_label_array(self, detected_classes: List[str]) -> LabelArray:
         if self.idx is None:
-            labels = [Label(id=i, name=cls) for i,cls in enumerate(detected_classes)]
+            labels = [Label(id=i+1, name=cls) for i,cls in enumerate(detected_classes)]
         else:
             labels = [Label(id=self.idx[cls], name=cls) for i,cls in enumerate(detected_classes)]
         lab_arr = LabelArray(header=self.header,
