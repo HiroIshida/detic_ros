@@ -40,12 +40,6 @@ class DeticWrapper:
         self.class_names = self.predictor.metadata.get("thing_classes", None)
         self.header = None
         self.data = None
-        self.idx = None
-
-        if node_config.vocabulary == 'custom':
-            self.idx = {'background': 0}
-            for i,name in enumerate(node_config.custom_vocabulary.split(',')):
-                self.idx[name] = i+1
 
 
     @staticmethod
@@ -57,7 +51,7 @@ class DeticWrapper:
         for key in  path_dict.keys():
             path_dict[key] = os.path.join(pack_path, path_dict[key])
 
-    def inference_step(self, msg: Image) -> Tuple[Image, List[str], List[float], Optional[VisImage]]:
+    def inference_step(self, msg: Image) -> Tuple[Image, List[int], List[float], Optional[VisImage]]:
         # Segmentation image, detected classes, detection scores, visualization image
         img = self.bridge.imgmsg_to_cv2(msg, desired_encoding='passthrough')
         self.header = msg.header
@@ -92,9 +86,8 @@ class DeticWrapper:
 
         # Get class and score arrays
         class_indexes = instances.pred_classes.tolist()
-        class_names_detected = [self.class_names[i] for i in class_indexes]
         scores = instances.scores.tolist()
-        return seg_img, class_names_detected, scores, visualized_output
+        return seg_img, class_indexes, scores, visualized_output
 
     def get_debug_img(self, visualized_output: VisImage) -> Image:
         # Call after inference_step
@@ -112,19 +105,18 @@ class DeticWrapper:
         return debug_seg_img
 
     def get_segmentation_info(self, seg_img: Image,
-                              detected_classes: List[str],
+                              detected_classes: List[int],
                               scores: List[float]) -> SegmentationInfo:
-        seg_info = SegmentationInfo(detected_classes=detected_classes,
+        detected_classes_names = [self.class_names[i] for i in detected_classes]
+        seg_info = SegmentationInfo(detected_classes=detected_classes_names,
                                     scores=scores,
                                     segmentation=seg_img,
                                     header=self.header)
         return seg_info
 
     def get_label_array(self, detected_classes: List[str]) -> LabelArray:
-        if self.idx is None:
-            labels = [Label(id=i+1, name=cls) for i,cls in enumerate(detected_classes)]
-        else:
-            labels = [Label(id=self.idx[cls], name=cls) for i,cls in enumerate(detected_classes)]
+        # Label 0 is reserved for the background
+        labels = [Label(id=i+1, name=self.class_names[i]) for i in detected_classes]
         lab_arr = LabelArray(header=self.header,
                              labels=labels)
         return lab_arr
