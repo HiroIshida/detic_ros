@@ -1,5 +1,4 @@
 import os
-import copy
 from typing import Optional, Tuple, List
 
 import rospy
@@ -39,7 +38,8 @@ class DeticWrapper:
         self.node_config = node_config
         self.bridge = CvBridge()
         self.class_names = self.predictor.metadata.get("thing_classes", None)
-        self.seg_img = None
+        self.header = None
+        self.data = None
 
     @staticmethod
     def _adhoc_hack_metadata_path():
@@ -53,6 +53,7 @@ class DeticWrapper:
     def infer(self, msg: Image) -> Tuple[Image, List[str], List[float], Optional[VisImage]]:
         # Segmentation image, detected classes, detection scores, visualization image
         img = self.bridge.imgmsg_to_cv2(msg, desired_encoding='passthrough')
+        self.header = msg.header
 
         if self.node_config.verbose:
             time_start = rospy.Time.now()
@@ -78,44 +79,48 @@ class DeticWrapper:
             mask = instances.pred_masks[i]
             # lable 0 is reserved for background label, so starting from 1
             data[mask] = (i + 1)
-        self.seg_img = self.bridge.cv2_to_imgmsg(data, encoding="32SC1")
+        self.data = data
+        seg_img = self.bridge.cv2_to_imgmsg(data, encoding="32SC1")
+        seg_img.header = self.header
 
         # Get class and score arrays
         class_indexes = instances.pred_classes.tolist()
         class_names_detected = ['background'] + [self.class_names[i] for i in class_indexes]
         scores = [1.0] + instances.scores.tolist() # confidence with 1.0 about background detection
-        return self.seg_img, class_names_detected, scores, visualized_output
+        return seg_img, class_names_detected, scores, visualized_output
 
     def get_debug_img(self, visualized_output: VisImage) -> Image:
         # Call after infer
         debug_img = self.bridge.cv2_to_imgmsg(visualized_output.get_image(),
                                               encoding="rgb8")
-        debug_img.header = self.seg_img.header
+        debug_img.header = self.header
         return debug_img
 
     def get_debug_segimg(self) -> Image:
         # Call after infer
-        debug_seg_img = copy.deepcopy(self.seg_img)
-        human_friendly_scaling = 255 // debug_seg_img.data.max()
-        debug_seg_img.data *= human_friendly_scaling
+        human_friendly_scaling = 255 // self.data.max()
+        new_data = (self.data * human_friendly_scaling).astype(np.uint8)
+        debug_seg_img = self.bridge.cv2_to_imgmsg(new_data, encoding="mono8")
+        debug_seg_img.header = self.header
         return debug_seg_img
 
-    def get_segmentation_info(self, detected_classes: List[str],
+    def get_segmentation_info(self, seg_img: Image,
+                              detected_classes: List[str],
                               scores: List[float]) -> SegmentationInfo:
         seg_info = SegmentationInfo(detected_classes=detected_classes,
                                     scores=scores,
-                                    segmentation=self.seg_img,
-                                    header=self.seg_img.header)
+                                    segmentation=seg_img,
+                                    header=self.header)
         return seg_info
 
     def get_label_array(self, detected_classes: List[str]) -> LabelArray:
         labels = [Label(id=i, name=cls) for i,cls in enumerate(detected_classes)]
-        lab_arr = LabelArray(header=self.seg_img.header,
+        lab_arr = LabelArray(header=self.header,
                              labels=labels)
         return lab_arr
 
     def get_score_array(self, scores: List[float]) -> VectorArray:
-        vec_arr = VectorArray(header=self.seg_img.header,
+        vec_arr = VectorArray(header=self.header,
                               vector_dim=len(scores),
                               data=scores)
         return vec_arr

@@ -60,14 +60,14 @@ class DeticRosNode:
             self.pub_labels.publish(self.detic_wrapper.get_label_array(labels))
             self.pub_score.publish(self.detic_wrapper.get_score_array(scores))
         else:
-            seg_info = self.detic_wrapper.get_segmentation_info(labels, scores)
+            seg_info = self.detic_wrapper.get_segmentation_info(seg_img, labels, scores)
             self.pub_info.publish(seg_info)
 
         # Publish optional topics
         if self.pub_debug_image is not None and vis_img is not None:
             debug_img = self.detic_wrapper.get_debug_img(vis_img)
             self.pub_debug_image.publish(debug_img)
-        if self.pub_debug_segmentation_image is not None and debug_seg_img is not None:
+        if self.pub_debug_segmentation_image is not None:
             debug_seg_img = self.detic_wrapper.get_debug_segimg()
             self.pub_debug_segmentation_image.publish(debug_seg_img)
 
