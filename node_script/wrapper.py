@@ -69,14 +69,8 @@ class DeticWrapper:
             rospy.loginfo('elapsed time to inference {}'.format(time_elapsed))
             rospy.loginfo('detected {} classes'.format(len(instances)))
 
-        # Create Image containing segmentation info
-        if self.seg_img is None:
-            self.seg_img = Image(height=img.shape[0], width=img.shape[1])
-            self.seg_img.header = msg.header
-            self.seg_img.encoding = '8UC1' # TODO(HiroIshida) are 256 classes enough??
-            self.seg_img.is_bigendian = 0
-            self.seg_img.step = self.seg_img.width * 1
-        data = np.zeros((self.seg_img.height, self.seg_img.width), dtype=np.uint8)
+        # Initialize segmentation data
+        data = np.zeros((img.shape[0], img.shape[1]), dtype=np.int32)
 
         # largest to smallest order to reduce occlusion.
         sorted_index = np.argsort([-mask.sum() for mask in instances.pred_masks])
@@ -84,8 +78,7 @@ class DeticWrapper:
             mask = instances.pred_masks[i]
             # lable 0 is reserved for background label, so starting from 1
             data[mask] = (i + 1)
-        self.seg_img.data = data.flatten().astype(np.uint8).tolist()
-        # assert set(self.seg_img.data) == set(list(range(len(instances.pred_masks)+1)))
+        self.seg_img = self.bridge.cv2_to_imgmsg(data, encoding="32SC1")
 
         # Get class and score arrays
         class_indexes = instances.pred_classes.tolist()
