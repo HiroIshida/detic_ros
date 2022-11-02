@@ -47,6 +47,12 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     ros-noetic-jsk-recognition-msgs \
     && rm -rf /var/lib/apt/lists/*
 
+# # install launch/sample_detection.launch dependencies
+# RUN apt-get install -y --no-install-recommends \
+#     ros-noetic-jsk-pcl-ros \
+#     ros-noetic-jsk-pcl-ros-utils \
+#     && rm -rf /var/lib/apt/lists/*
+
 # install bootstrap tools
 RUN apt-get update && apt-get install --no-install-recommends -y \
     build-essential \
