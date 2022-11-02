@@ -57,7 +57,7 @@ class DeticWrapper:
         for key in  path_dict.keys():
             path_dict[key] = os.path.join(pack_path, path_dict[key])
 
-    def infer(self, msg: Image) -> Tuple[Image, List[str], List[float], Optional[VisImage]]:
+    def inference_step(self, msg: Image) -> Tuple[Image, List[str], List[float], Optional[VisImage]]:
         # Segmentation image, detected classes, detection scores, visualization image
         img = self.bridge.imgmsg_to_cv2(msg, desired_encoding='passthrough')
         self.header = msg.header
@@ -97,14 +97,14 @@ class DeticWrapper:
         return seg_img, class_names_detected, scores, visualized_output
 
     def get_debug_img(self, visualized_output: VisImage) -> Image:
-        # Call after infer
+        # Call after inference_step
         debug_img = self.bridge.cv2_to_imgmsg(visualized_output.get_image(),
                                               encoding="rgb8")
         debug_img.header = self.header
         return debug_img
 
     def get_debug_segimg(self) -> Image:
-        # Call after infer
+        # Call after inference_step
         human_friendly_scaling = 255 // self.data.max()
         new_data = (self.data * human_friendly_scaling).astype(np.uint8)
         debug_seg_img = self.bridge.cv2_to_imgmsg(new_data, encoding="mono8")
@@ -134,3 +134,19 @@ class DeticWrapper:
                               vector_dim=len(scores),
                               data=scores)
         return vec_arr
+
+    def infer(self, msg: Image) -> Tuple[SegmentationInfo, Optional[Image], Optional[Image]]:
+        seg_img, labels, scores, vis_img = self.inference_step(msg)
+        seg_info = self.get_segmentation_info(seg_img, labels, scores)
+
+        if self.node_config.out_debug_img:
+            debug_img = self.get_debug_img(vis_img)
+        else:
+            debug_img = None
+
+        if self.node_config.out_debug_img:
+            debug_seg_img = self.get_debug_segimg()
+        else:
+            debug_seg_img = None
+
+        return seg_info, debug_img, debug_seg_img

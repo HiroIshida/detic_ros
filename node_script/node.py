@@ -52,7 +52,7 @@ class DeticRosNode:
 
     def callback_image(self, msg: Image):
         # Inference
-        seg_img, labels, scores, vis_img = self.detic_wrapper.infer(msg)
+        seg_img, labels, scores, vis_img = self.detic_wrapper.inference_step(msg)
 
         # Publish main topics
         if self.detic_wrapper.node_config.use_jsk_msgs:
