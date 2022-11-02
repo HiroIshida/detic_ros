@@ -116,7 +116,8 @@ if __name__=='__main__':
     assert len(image_list) > 0
     print('{} images found'.format(len(image_list)))
 
-    node_config = NodeConfig.from_args(model_type, True, False, False, False,
+    node_config = NodeConfig.from_args(model_type,
+                                       False, True, False, False, False,
                                        confidence_threshold, device)
     detic_wrapper = DeticWrapper(node_config)
     results = [detic_wrapper.infer(image) for image in tqdm.tqdm(image_list)]
@@ -129,7 +130,7 @@ if __name__=='__main__':
     # dump debug gif image
     bridge = CvBridge()
     convert = lambda msg: bridge.imgmsg_to_cv2(msg, desired_encoding='passthrough')
-    debug_iamges = [result[1] for result in results]
-    images = list(map(convert, debug_iamges))
+    debug_images = [result[1] for result in results]
+    images = list(map(convert, debug_images))
     clip = ImageSequenceClip(images, fps=20)
     clip.write_gif(debug_file_name, fps=20)
