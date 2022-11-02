@@ -7,11 +7,6 @@ from sensor_msgs.msg import Image
 from detic_ros.msg import SegmentationInfo
 from cv_bridge import CvBridge
 
-def segmentation_image_to_nparray(msg_seg):
-    buf = np.ndarray(shape=(1, int(len(msg_seg.data))),
-                      dtype=np.uint8, buffer=msg_seg.data)
-    return buf.reshape(msg_seg.height, msg_seg.width)
-
 
 class SampleNode:
 
@@ -22,7 +17,8 @@ class SampleNode:
         ts = message_filters.ApproximateTimeSynchronizer(sub_list, 100, 10.0)
         ts.registerCallback(self.callback)
 
-        self.pub = rospy.Publisher(rospy.get_param('~out_image'), Image)
+        self.pub = rospy.Publisher(rospy.get_param('~out_image'), Image,
+                                   queue_size=1)
         self.class_name = mask_class_name
 
     def callback(self, msg_image, msg_info: SegmentationInfo):
@@ -43,11 +39,10 @@ class SampleNode:
         bridge = CvBridge()
         img = bridge.imgmsg_to_cv2(msg_image, desired_encoding='passthrough')
 
-        seg_matrix = segmentation_image_to_nparray(seg_img)
-        mask_indexes = np.where(seg_matrix==label_index)
+        mask_indexes = np.where(img==label_index)
 
         masked_img = copy.deepcopy(img)
-        masked_img[mask_indexes] = np.zeros(3, dtype=np.uint8) # filled by black
+        masked_img[mask_indexes] = 0  # filled by black
 
         msg_out = bridge.cv2_to_imgmsg(masked_img, encoding="rgb8")
         self.pub.publish(msg_out)
