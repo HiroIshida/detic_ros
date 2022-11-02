@@ -52,6 +52,7 @@
       <remap from="~output" to="detic_segmentor/indices"/>
     </node>
 
+    <!-- cluster_filter: 1 may be unstable? jsk_recognition/#2737 -->
     <node name="detic_euclidean_clustering"
           pkg="nodelet" type="nodelet"
           args="load jsk_pcl/EuclideanClustering $(arg MANAGER)"

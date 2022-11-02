@@ -10,6 +10,7 @@
     <remap from="out" to="decompressed_image"/>
   </node>
 
+  <!-- needs image_transport_plugins/#64 -->
   <node name="depth_decompresser"
        pkg="image_transport" type="republish"
        args="compressedDepth raw" respawn="true">
