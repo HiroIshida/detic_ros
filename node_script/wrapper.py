@@ -78,7 +78,7 @@ class DeticWrapper:
         sorted_index = np.argsort([-mask.sum() for mask in instances.pred_masks])
         for i in sorted_index:
             mask = instances.pred_masks[i]
-            # lable 0 is reserved for background label, so starting from 1
+            # label 0 is reserved for background label, so starting from 1
             data[mask] = (i + 1)
         self.data = data
         seg_img = self.bridge.cv2_to_imgmsg(data, encoding="32SC1")

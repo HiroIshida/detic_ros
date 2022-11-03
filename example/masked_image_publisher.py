@@ -24,6 +24,11 @@ class SampleNode:
     def callback(self, msg_image, msg_info: SegmentationInfo):
         rospy.loginfo('rec messages')
 
+        # simply republish if class name is 'background'
+        if (self.class_name == 'background'):
+            self.pub.publish(msg_image)
+            return
+
         # find label number corresponding to desired object class name
         try:
             label_index = msg_info.detected_classes.index(self.class_name)
@@ -31,6 +36,7 @@ class SampleNode:
             rospy.loginfo('specified object class {} is detected with score {}'.format(
                 self.class_name, confidence_score))
         except ValueError:
+            rospy.logdebug('class not found: {}'.format(self.class_name))
             return
 
         seg_img = msg_info.segmentation
@@ -39,7 +45,8 @@ class SampleNode:
         bridge = CvBridge()
         img = bridge.imgmsg_to_cv2(msg_image, desired_encoding='passthrough')
 
-        mask_indexes = np.where(img==label_index)
+        # Add 1 to label_index to account for the background
+        mask_indexes = np.where(img==label_index+1)
 
         masked_img = copy.deepcopy(img)
         masked_img[mask_indexes] = 0  # filled by black
@@ -49,8 +56,18 @@ class SampleNode:
 
 
 if __name__=='__main__':
+    import sys
+    argv = [x for x in sys.argv if not x.startswith('_')]  # remove roslaunch args
+    if len(argv) == 1:
+        class_name = 'background'
+    elif len(argv) == 2:
+        class_name = argv[1]
+    else:
+        print('Usage: masked_image_publisher.py [class_name]')
+        sys.exit(1)
+
     rospy.init_node('mask_image_publisher', anonymous=True)
-    SampleNode(mask_class_name='background')
+    SampleNode(mask_class_name=class_name)
     rospy.spin()
     pass
 

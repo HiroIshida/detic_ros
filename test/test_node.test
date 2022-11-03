@@ -22,6 +22,14 @@
     <param name="out_image" value="/test_out_image" />
   </node>
 
+  <node pkg="detic_ros" type="masked_image_publisher.py" name="masked_image_publisher_filter"
+        args="bottle">
+    <param name="in_image" value="/image_publisher/image_raw" />
+    <param name="segmentation" value="/docker/detic_segmentor/segmentation_image" />
+    <param name="seginfo" value="/docker/detic_segmentor/segmentation_info" />
+    <param name="out_image" value="/test_out_image_filter" />
+  </node>
+
   <test pkg="detic_ros" type="test_detic_ros_node.py" test-name="test_detic_ros_node">
   </test>
 
