@@ -48,10 +48,16 @@ Example for using the published topic from the node above is [masked_image_publi
   - Input image
 - `~debug_image` (`sensor_msgs/Image`)
   - debug image 
-- `~debug_segmentation_image` (`sensor_msgs/Image` with `8UC1` encoding)
+- `~debug_segmentation_image` (`sensor_msgs/Image` with `32SC1` encoding)
   - Say detected class number is 14, `~segmentation_image` in grayscale image is almost completely dark and not good for debugging. Therefore this topic scale the value to [0 ~ 255] so that grayscale image is human-friendly.
 - `~segmentation_info` (`detic_ros/SegmentationInfo`)
-  - class name list, confidence score list and segmentation image with `8UC1` encoding. The image is filled by 0 and positive integers indicating segmented object number. These indexes correspond to those of class name list and confidence score list. Note that index 0 is always reserved for 'background' instance and the confidence of the that instance is always 1.0.
+  - Published when `use_jsk_msgs` is false. Includes the class name list, confidence score list and segmentation image with `32SC1` encoding. The image is filled by 0 and positive integers indicating segmented object number. These indexes correspond to one plus those of class name list and confidence score list. For example, an image value of 2 corresponds to the second (index=1) item in the class name and score list. Note that the image value of 0 is always reserved for the 'background' instance.
+- `~segmentation` (`sensor_msgs/Image`)
+  - Published when `use_jsk_msgs` is true. Includes the segmentation image with `32SC1` encoding.
+- `~detected_classes` (`jsk_recognition_msgs/LabelArray`)
+  - Published when `use_jsk_msgs` is true. Includes the names and ids of the detected objects. In the same order as `~score`.
+- `~score` (`jsk_recognition_msgs/VectorArray`)
+  - Published when `use_jsk_msgs` is true. Includes the confidence score of the detected objects. In the same order as `~detected_classes`.
 
 As for rosparam, see [node_cofig.py](./node_script/node_config.py).
 

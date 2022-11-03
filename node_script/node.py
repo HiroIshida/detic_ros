@@ -18,6 +18,9 @@ class DeticRosNode:
     pub_debug_image: Publisher
     pub_debug_segmentation_image: Publisher
     pub_info: Publisher
+    pub_segimg: Publisher
+    pub_labels: Publisher
+    pub_score: Publisher
 
     def __init__(self, node_config: Optional[NodeConfig]=None):
         if node_config is None:
