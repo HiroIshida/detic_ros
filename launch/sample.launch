@@ -2,9 +2,10 @@
   <arg name="namespace" default="docker" />
 
   <arg name="verbose" default="true" />
+  <arg name="model_type" default="swin" />
   <arg name="enable_pubsub" default="true" />
   <arg name="out_debug_img" default="true" />
-  <arg name="out_debug_segimage" default="true" />
+  <arg name="out_debug_segimg" default="true" />
   <arg name="confidence_threshold" default="0.5" />
   <arg name="input_image" default="input" />
   <arg name="compressed" default="true" />
@@ -27,9 +28,10 @@
           output="screen" >
     <remap from="~input_image" to="$(arg _input_image)"/>
     <param name="verbose" value="$(arg verbose)"/>
+    <param name="model_type" value="$(arg model_type)" />
     <param name="enable_pubsub" value="$(arg enable_pubsub)"/>
     <param name="out_debug_img" value="$(arg out_debug_img)"/>
-    <param name="out_debug_segimage" value="$(arg out_debug_segimage)"/>
+    <param name="out_debug_segimg" value="$(arg out_debug_segimg)"/>
     <param name="confidence_threshold" value="$(arg confidence_threshold)"/>
     <param name="device" value="$(arg device)"/>
     <param name="vocabulary" value="$(arg vocabulary)" />

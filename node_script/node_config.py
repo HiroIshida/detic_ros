@@ -7,7 +7,7 @@ import rospkg
 import torch
 
 # Dirty but no way, because CenterNet2 is not package oriented
-sys.path.insert(0, os.path.join(sys.path[0], 'third_party/CenterNet2/projects/CenterNet2/'))
+sys.path.insert(0, os.path.join(sys.path[0], 'third_party/CenterNet2/'))
 
 from detectron2.config import get_cfg
 from centernet.config import add_centernet_config
@@ -18,8 +18,9 @@ from detic.config import add_detic_config
 class NodeConfig:
     enable_pubsub: bool
     out_debug_img: bool
-    out_debug_segimage: bool
+    out_debug_segimg: bool
     verbose: bool
+    use_jsk_msgs: bool
     vocabulary: str
     custom_vocabulary: str
     detic_config_path: str
@@ -27,12 +28,21 @@ class NodeConfig:
     confidence_threshold: float
     device_name: str
 
+    model_names = {
+        'swin': 'Detic_LCOCOI21k_CLIP_SwinB_896b32_4x_ft4x_max-size',
+        'convnet': 'Detic_LCOCOI21k_CLIP_CXT21k_640b32_4x_ft4x_max-size',
+        'res50': 'Detic_LCOCOI21k_CLIP_R5021k_640b32_4x_ft4x_max-size',
+        'res18': 'Detic_LCOCOI21k_CLIP_R18_640b32_4x_ft4x_max-size',
+    }
+
     @classmethod
     def from_args(cls, 
+            model_type: str = 'swin',
             enable_pubsub: bool = True,
             out_debug_img: bool = True,
-            out_debug_segimage: bool = True,
+            out_debug_segimg: bool = True,
             verbose: bool = False,
+            use_jsk_msgs: bool = False,
             confidence_threshold: float = 0.5,
             device_name: str = 'auto',
             vocabulary: str = 'lvis',
@@ -43,22 +53,25 @@ class NodeConfig:
             device_name = 'cuda' if torch.cuda.is_available() else 'cpu'
 
         assert device_name in ['cpu', 'cuda']
+        assert model_type in NodeConfig.model_names
 
         pack_path = rospkg.RosPack().get_path('detic_ros')
 
+        model_name = NodeConfig.model_names[model_type]
         default_detic_config_path = os.path.join(
-            pack_path, 'detic_configs', 
-            'Detic_LCOCOI21k_CLIP_SwinB_896b32_4x_ft4x_max-size.yaml')
+            pack_path, 'detic_configs',
+            model_name + '.yaml')
 
         default_model_weights_path = os.path.join(
             pack_path, 'models',
-            'Detic_LCOCOI21k_CLIP_SwinB_896b32_4x_ft4x_max-size.pth')
+            model_name + '.pth')
 
         return cls(
                 enable_pubsub,
                 out_debug_img,
-                out_debug_segimage,
+                out_debug_segimg,
                 verbose,
+                use_jsk_msgs,
                 vocabulary,
                 custom_vocabulary,
                 default_detic_config_path,
@@ -70,10 +83,12 @@ class NodeConfig:
     def from_rosparam(cls):
 
         return cls.from_args(
+                rospy.get_param('~model_type', 'swin'),
                 rospy.get_param('~enable_pubsub', True),
                 rospy.get_param('~out_debug_img', True),
-                rospy.get_param('~out_debug_segimage', False),
+                rospy.get_param('~out_debug_segimg', False),
                 rospy.get_param('~verbose', True),
+                rospy.get_param('~use_jsk_msgs', False),
                 rospy.get_param('~confidence_threshold', 0.5),
                 rospy.get_param('~device', 'auto'),
                 rospy.get_param('~vocabulary', 'lvis'),

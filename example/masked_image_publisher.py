@@ -7,11 +7,6 @@ from sensor_msgs.msg import Image
 from detic_ros.msg import SegmentationInfo
 from cv_bridge import CvBridge
 
-def segmentation_image_to_nparray(msg_seg):
-    buf = np.ndarray(shape=(1, int(len(msg_seg.data))),
-                      dtype=np.uint8, buffer=msg_seg.data)
-    return buf.reshape(msg_seg.height, msg_seg.width)
-
 
 class SampleNode:
 
@@ -22,11 +17,17 @@ class SampleNode:
         ts = message_filters.ApproximateTimeSynchronizer(sub_list, 100, 10.0)
         ts.registerCallback(self.callback)
 
-        self.pub = rospy.Publisher(rospy.get_param('~out_image'), Image)
+        self.pub = rospy.Publisher(rospy.get_param('~out_image'), Image,
+                                   queue_size=1)
         self.class_name = mask_class_name
 
     def callback(self, msg_image, msg_info: SegmentationInfo):
         rospy.loginfo('rec messages')
+
+        # simply republish if class name is 'background'
+        if (self.class_name == 'background'):
+            self.pub.publish(msg_image)
+            return
 
         # find label number corresponding to desired object class name
         try:
@@ -35,6 +36,7 @@ class SampleNode:
             rospy.loginfo('specified object class {} is detected with score {}'.format(
                 self.class_name, confidence_score))
         except ValueError:
+            rospy.logdebug('class not found: {}'.format(self.class_name))
             return
 
         seg_img = msg_info.segmentation
@@ -43,19 +45,29 @@ class SampleNode:
         bridge = CvBridge()
         img = bridge.imgmsg_to_cv2(msg_image, desired_encoding='passthrough')
 
-        seg_matrix = segmentation_image_to_nparray(seg_img)
-        mask_indexes = np.where(seg_matrix==label_index)
+        # Add 1 to label_index to account for the background
+        mask_indexes = np.where(img==label_index+1)
 
         masked_img = copy.deepcopy(img)
-        masked_img[mask_indexes] = np.zeros(3, dtype=np.uint8) # filled by black
+        masked_img[mask_indexes] = 0  # filled by black
 
         msg_out = bridge.cv2_to_imgmsg(masked_img, encoding="rgb8")
         self.pub.publish(msg_out)
 
 
 if __name__=='__main__':
+    import sys
+    argv = [x for x in sys.argv if not x.startswith('_')]  # remove roslaunch args
+    if len(argv) == 1:
+        class_name = 'background'
+    elif len(argv) == 2:
+        class_name = argv[1]
+    else:
+        print('Usage: masked_image_publisher.py [class_name]')
+        sys.exit(1)
+
     rospy.init_node('mask_image_publisher', anonymous=True)
-    SampleNode(mask_class_name='background')
+    SampleNode(mask_class_name=class_name)
     rospy.spin()
     pass
 
