@@ -53,7 +53,7 @@ def bag_to_images(file_path: str, topic_name_extract: Optional[str] = None):
 
 
 def dump_result_as_pickle(results, image_list, output_file_name):
-    result_dict = {'image': [], 'seginfo': [], 'debug_image': []}
+    result_dict = {'image': [], 'seginfo': [], 'debug_image': []}  # type: ignore
     for ((seginfo, debug_image, _), image) in zip(results, image_list):
         seginfo, debug_image, _ = detic_wrapper.infer(image)
         result_dict['image'].append(image)
