@@ -31,3 +31,4 @@ jobs:
         - name: rostest
           run: |
               docker run --rm detic_ros:latest /bin/bash -i -c "source ~/.bashrc; rostest detic_ros test_node.test"
+              docker run --rm detic_ros:latest /bin/bash -i -c "source ~/.bashrc; rostest detic_ros test_batch_processor.test"
