@@ -1,0 +1,26 @@
+name: Peripheral test
+
+on:
+    push:
+        branches:
+            - master
+    pull_request:
+        branches:
+            - master
+
+jobs:
+  peripheral:
+    runs-on: ubuntu-latest
+    steps:
+        - name: Checkout Code
+          uses: actions/checkout@v2
+        - name: pip install formatters and mypy
+          run: |
+              pip3 install mypy
+
+        - name: check by mypy
+          run: |
+              pip3 install -r requirements.txt
+              pip3 install numpy==1.23  # to enable numpy's type checking
+              mypy --version
+              mypy .

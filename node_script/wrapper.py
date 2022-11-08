@@ -5,8 +5,8 @@ import rospy
 import rospkg
 from cv_bridge import CvBridge
 from sensor_msgs.msg import Image
+from std_msgs.msg import Header
 from detic_ros.msg import SegmentationInfo
-
 
 import torch
 import numpy as np
@@ -21,6 +21,10 @@ from node_config import NodeConfig
 class DeticWrapper:
     predictor: VisualizationDemo
     node_config: NodeConfig
+    bridge: CvBridge
+    class_names: List[str]
+    header: Optional[Header]
+    data: Optional[np.ndarray]
 
     class DummyArgs: 
         vocabulary: str
@@ -93,14 +97,17 @@ class DeticWrapper:
         # Call after inference_step
         debug_img = self.bridge.cv2_to_imgmsg(visualized_output.get_image(),
                                               encoding="rgb8")
+        assert self.header is not None
         debug_img.header = self.header
         return debug_img
 
     def get_debug_segimg(self) -> Image:
         # Call after inference_step
+        assert self.data is not None
         human_friendly_scaling = 255 // self.data.max()
         new_data = (self.data * human_friendly_scaling).astype(np.uint8)
         debug_seg_img = self.bridge.cv2_to_imgmsg(new_data, encoding="mono8")
+        assert self.header is not None
         debug_seg_img.header = self.header
         return debug_seg_img
 
@@ -114,7 +121,7 @@ class DeticWrapper:
                                     header=self.header)
         return seg_info
 
-    def get_label_array(self, detected_classes: List[str]) -> LabelArray:
+    def get_label_array(self, detected_classes: List[int]) -> LabelArray:
         # Label 0 is reserved for the background
         labels = [Label(id=i+1, name=self.class_names[i]) for i in detected_classes]
         lab_arr = LabelArray(header=self.header,
