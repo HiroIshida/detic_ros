@@ -1,21 +1,20 @@
 import os
-from typing import Optional, Tuple, List
-
-import rospy
-import rospkg
-from cv_bridge import CvBridge
-from sensor_msgs.msg import Image
-from std_msgs.msg import Header
-from detic_ros.msg import SegmentationInfo
-
-import torch
-import numpy as np
+from typing import List, Optional, Tuple
 
 import detic
+import numpy as np
+import rospkg
+import rospy
+import torch
+from cv_bridge import CvBridge
+from detectron2.utils.visualizer import VisImage
 from detic.predictor import VisualizationDemo
 from jsk_recognition_msgs.msg import Label, LabelArray, VectorArray
-from detectron2.utils.visualizer import VisImage
 from node_config import NodeConfig
+from sensor_msgs.msg import Image
+from std_msgs.msg import Header
+
+from detic_ros.msg import SegmentationInfo
 
 
 class DeticWrapper:
@@ -26,8 +25,9 @@ class DeticWrapper:
     header: Optional[Header]
     data: Optional[np.ndarray]
 
-    class DummyArgs: 
+    class DummyArgs:
         vocabulary: str
+
         def __init__(self, vocabulary, custom_vocabulary):
             assert vocabulary in ['lvis', 'openimages', 'objects365', 'coco', 'custom']
             self.vocabulary = vocabulary
@@ -45,14 +45,13 @@ class DeticWrapper:
         self.header = None
         self.data = None
 
-
     @staticmethod
     def _adhoc_hack_metadata_path():
         # because original BUILDIN_CLASSIFIER is somehow posi-dep
         rospack = rospkg.RosPack()
         pack_path = rospack.get_path('detic_ros')
         path_dict = detic.predictor.BUILDIN_CLASSIFIER
-        for key in  path_dict.keys():
+        for key in path_dict.keys():
             path_dict[key] = os.path.join(pack_path, path_dict[key])
 
     def inference_step(self, msg: Image) -> Tuple[Image, List[int], List[float], Optional[VisImage]]:
@@ -123,7 +122,7 @@ class DeticWrapper:
 
     def get_label_array(self, detected_classes: List[int]) -> LabelArray:
         # Label 0 is reserved for the background
-        labels = [Label(id=i+1, name=self.class_names[i]) for i in detected_classes]
+        labels = [Label(id=i + 1, name=self.class_names[i]) for i in detected_classes]
         lab_arr = LabelArray(header=self.header,
                              labels=labels)
         return lab_arr
