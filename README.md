@@ -66,8 +66,11 @@ For higher recognition frequencies turn off all debug info, run on GPU, decompre
 
 The `sample_detection.launch` with default parameters handles all of this, yielding object bounding boxes at around 10Hz.
 
-### step2 (Subscribe from node in step1 and do something)
+### step2a (Subscribe from node in step1 and do something)
 Example for using the published topic from the node above is [masked_image_publisher.py](./example/masked_image_publisher.py). This will be helpful for understanding how to apply `SegmentationInfo` message to a image. The [test file](/test/test_node.test) for this example also might be helpful.
+
+### step2b (Service call)
+See definition of [`srv/DeticSeg.srv`](srv/DeticSeg.srv)
 
 ### ROS node information
 - `~input_image` (`sensor_msgs/Image`)
