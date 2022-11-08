@@ -16,7 +16,7 @@ jobs:
           uses: actions/checkout@v2
         - name: pip install formatters and mypy
           run: |
-              pip3 install mypy
+              pip3 install mypy flake8 isort
 
         - name: check by mypy
           run: |
@@ -24,3 +24,8 @@ jobs:
               pip3 install numpy==1.23  # to enable numpy's type checking
               mypy --version
               mypy .
+
+        - name: check by isrot and flake8
+          run: |
+              python3 -m isort example/ test/ node_script/
+              python3 -m flake8 example/ test/ node_script/

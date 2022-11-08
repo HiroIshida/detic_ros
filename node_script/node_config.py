@@ -1,16 +1,16 @@
 import os
 import sys
 from dataclasses import dataclass
-import rospy
-import rospkg
 
+import rospkg
+import rospy
 import torch
 
 # Dirty but no way, because CenterNet2 is not package oriented
 sys.path.insert(0, os.path.join(sys.path[0], 'third_party/CenterNet2/'))
 
-from detectron2.config import get_cfg
 from centernet.config import add_centernet_config
+from detectron2.config import get_cfg
 from detic.config import add_detic_config
 
 
@@ -36,7 +36,8 @@ class NodeConfig:
     }
 
     @classmethod
-    def from_args(cls, 
+    def from_args(
+            cls,
             model_type: str = 'swin',
             enable_pubsub: bool = True,
             out_debug_img: bool = True,
@@ -46,8 +47,7 @@ class NodeConfig:
             confidence_threshold: float = 0.5,
             device_name: str = 'auto',
             vocabulary: str = 'lvis',
-            custom_vocabulary: str = '',
-            ):
+            custom_vocabulary: str = ''):
 
         if device_name == 'auto':
             device_name = 'cuda' if torch.cuda.is_available() else 'cpu'
@@ -67,33 +67,32 @@ class NodeConfig:
             model_name + '.pth')
 
         return cls(
-                enable_pubsub,
-                out_debug_img,
-                out_debug_segimg,
-                verbose,
-                use_jsk_msgs,
-                vocabulary,
-                custom_vocabulary,
-                default_detic_config_path,
-                default_model_weights_path,
-                confidence_threshold,
-                device_name)
+            enable_pubsub,
+            out_debug_img,
+            out_debug_segimg,
+            verbose,
+            use_jsk_msgs,
+            vocabulary,
+            custom_vocabulary,
+            default_detic_config_path,
+            default_model_weights_path,
+            confidence_threshold,
+            device_name)
 
     @classmethod
     def from_rosparam(cls):
 
         return cls.from_args(
-                rospy.get_param('~model_type', 'swin'),
-                rospy.get_param('~enable_pubsub', True),
-                rospy.get_param('~out_debug_img', True),
-                rospy.get_param('~out_debug_segimg', False),
-                rospy.get_param('~verbose', True),
-                rospy.get_param('~use_jsk_msgs', False),
-                rospy.get_param('~confidence_threshold', 0.5),
-                rospy.get_param('~device', 'auto'),
-                rospy.get_param('~vocabulary', 'lvis'),
-                rospy.get_param('~custom_vocabulary', ''),
-                )
+            rospy.get_param('~model_type', 'swin'),
+            rospy.get_param('~enable_pubsub', True),
+            rospy.get_param('~out_debug_img', True),
+            rospy.get_param('~out_debug_segimg', False),
+            rospy.get_param('~verbose', True),
+            rospy.get_param('~use_jsk_msgs', False),
+            rospy.get_param('~confidence_threshold', 0.5),
+            rospy.get_param('~device', 'auto'),
+            rospy.get_param('~vocabulary', 'lvis'),
+            rospy.get_param('~custom_vocabulary', ''))
 
     def to_detectron_config(self):
         cfg = get_cfg()
@@ -107,13 +106,13 @@ class NodeConfig:
         cfg.merge_from_list(['MODEL.WEIGHTS', self.model_weights_path])
 
         # Similar to https://github.com/facebookresearch/Detic/demo.py
-        cfg.MODEL.ROI_BOX_HEAD.ZEROSHOT_WEIGHT_PATH = 'rand' # load later
+        cfg.MODEL.ROI_BOX_HEAD.ZEROSHOT_WEIGHT_PATH = 'rand'  # load later
         cfg.MODEL.ROI_HEADS.ONE_CLASS_PER_PROPOSAL = True
 
         # Maybe should edit detic_configs/Base-C2_L_R5021k_640b64_4x.yaml
         pack_path = rospkg.RosPack().get_path('detic_ros')
         cfg.MODEL.ROI_BOX_HEAD.CAT_FREQ_PATH = os.path.join(
-                pack_path, 'datasets/metadata/lvis_v1_train_cat_info.json')
+            pack_path, 'datasets/metadata/lvis_v1_train_cat_info.json')
 
         cfg.freeze()
         return cfg

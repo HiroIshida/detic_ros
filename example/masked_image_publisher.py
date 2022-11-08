@@ -1,11 +1,13 @@
 #!/usr/bin/env python3
 import copy
+
+import message_filters
 import numpy as np
 import rospy
-import message_filters
-from sensor_msgs.msg import Image
-from detic_ros.msg import SegmentationInfo
 from cv_bridge import CvBridge
+from sensor_msgs.msg import Image
+
+from detic_ros.msg import SegmentationInfo
 
 
 class SampleNode:
@@ -46,7 +48,7 @@ class SampleNode:
         img = bridge.imgmsg_to_cv2(msg_image, desired_encoding='passthrough')
 
         # Add 1 to label_index to account for the background
-        mask_indexes = np.where(img==label_index+1)
+        mask_indexes = np.where(img == label_index + 1)
 
         masked_img = copy.deepcopy(img)
         masked_img[mask_indexes] = 0  # filled by black
@@ -55,7 +57,7 @@ class SampleNode:
         self.pub.publish(msg_out)
 
 
-if __name__=='__main__':
+if __name__ == '__main__':
     import sys
     argv = [x for x in sys.argv if not x.startswith('_')]  # remove roslaunch args
     if len(argv) == 1:
@@ -70,5 +72,3 @@ if __name__=='__main__':
     SampleNode(mask_class_name=class_name)
     rospy.spin()
     pass
-
-

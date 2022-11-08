@@ -2,18 +2,14 @@
 import argparse
 import os
 import pickle
-from numpy import inf
 from typing import List, Optional
 
 import rosbag
-import rospy
-from cv_bridge import CvBridge
-from sensor_msgs.msg import Image
-from detic_ros.msg import SegmentationInfo
-from moviepy.editor import ImageSequenceClip
 import tqdm
-
+from cv_bridge import CvBridge
+from moviepy.editor import ImageSequenceClip
 from node_config import NodeConfig
+from sensor_msgs.msg import Image
 from wrapper import DeticWrapper
 
 
@@ -78,7 +74,7 @@ def dump_result_as_rosbag(input_bagfile_name, results, output_file_name):
     bag_out.close()
 
 
-if __name__=='__main__':
+if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('input', type=str, help='input file path')
     parser.add_argument('-model', type=str, default='swin', help='model type')
@@ -129,7 +125,10 @@ if __name__=='__main__':
 
     # dump debug gif image
     bridge = CvBridge()
-    convert = lambda msg: bridge.imgmsg_to_cv2(msg, desired_encoding='passthrough')
+
+    def convert(msg):
+        bridge.imgmsg_to_cv2(msg, desired_encoding='passthrough')
+
     debug_images = [result[1] for result in results]
     images = list(map(convert, debug_images))
     clip = ImageSequenceClip(images, fps=20)

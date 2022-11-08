@@ -2,14 +2,14 @@
 from typing import Optional
 
 import rospy
-from rospy import Subscriber, Publisher
+from jsk_recognition_msgs.msg import LabelArray, VectorArray
+from node_config import NodeConfig
+from rospy import Publisher, Subscriber
 from sensor_msgs.msg import Image
+from wrapper import DeticWrapper
+
 from detic_ros.msg import SegmentationInfo
 from detic_ros.srv import DeticSeg, DeticSegRequest, DeticSegResponse
-from jsk_recognition_msgs.msg import LabelArray, VectorArray
-
-from node_config import NodeConfig
-from wrapper import DeticWrapper
 
 
 class DeticRosNode:
@@ -22,7 +22,7 @@ class DeticRosNode:
     pub_labels: Publisher
     pub_score: Publisher
 
-    def __init__(self, node_config: Optional[NodeConfig]=None):
+    def __init__(self, node_config: Optional[NodeConfig] = None):
         if node_config is None:
             node_config = NodeConfig.from_rosparam()
 
@@ -90,7 +90,7 @@ class DeticRosNode:
         return resp
 
 
-if __name__=='__main__':
+if __name__ == '__main__':
     rospy.init_node('detic_node', anonymous=True)
     node = DeticRosNode()
     rospy.spin()
