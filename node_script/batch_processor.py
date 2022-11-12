@@ -4,13 +4,14 @@ import os
 import pickle
 from typing import List, Optional
 
+import numpy as np
 import rosbag
 import tqdm
 from cv_bridge import CvBridge
 from moviepy.editor import ImageSequenceClip
 from node_config import NodeConfig
 from sensor_msgs.msg import Image
-from wrapper import DeticWrapper
+from wrapper import DeticWrapper, InferenceRawResult
 
 
 def bag_to_images(file_path: str, topic_name_extract: Optional[str] = None):
@@ -48,10 +49,16 @@ def bag_to_images(file_path: str, topic_name_extract: Optional[str] = None):
     return image_list
 
 
-def dump_result_as_pickle(results, image_list, output_file_name):
+def dump_result_as_pickle(
+        results: List[InferenceRawResult],
+        images: List[Image],
+        output_file_name: str):
+
     result_dict = {'image': [], 'seginfo': [], 'debug_image': []}  # type: ignore
-    for ((seginfo, debug_image, _), image) in zip(results, image_list):
-        seginfo, debug_image, _ = detic_wrapper.infer(image)
+    for result, image in zip(results, images):
+        seginfo = result.get_segmentation_info()
+        debug_image = result.get_ros_debug_image()
+
         result_dict['image'].append(image)
         result_dict['seginfo'].append(seginfo)
         result_dict['debug_image'].append(debug_image)
@@ -60,7 +67,11 @@ def dump_result_as_pickle(results, image_list, output_file_name):
         pickle.dump(result_dict, f)
 
 
-def dump_result_as_rosbag(input_bagfile_name, results, output_file_name):
+def dump_result_as_rosbag(
+        input_bagfile_name: str,
+        results: List[InferenceRawResult],
+        output_file_name: str):
+
     bag_out = rosbag.Bag(output_file_name, 'w')
 
     bag_inp = rosbag.Bag(input_bagfile_name)
@@ -68,7 +79,9 @@ def dump_result_as_rosbag(input_bagfile_name, results, output_file_name):
         bag_out.write(topic_name, msg, t)
     bag_inp.close()
 
-    for seginfo, debug_image, _ in results:
+    for result in results:
+        seginfo = result.get_segmentation_info()
+        debug_image = result.get_ros_debug_image()
         bag_out.write('/detic_segmentor/segmentation_info', seginfo, seginfo.header.stamp)
         bag_out.write('/detic_segmentor/debug_image', debug_image, debug_image.header.stamp)
     bag_out.close()
@@ -116,7 +129,7 @@ if __name__ == '__main__':
                                        False, True, False, False, False,
                                        confidence_threshold, device)
     detic_wrapper = DeticWrapper(node_config)
-    results = [detic_wrapper.infer(image) for image in tqdm.tqdm(image_list)]
+    results = [detic_wrapper.inference_step(image) for image in tqdm.tqdm(image_list)]
 
     if output_format == 'pkl':
         dump_result_as_pickle(results, image_list, output_file_name)
@@ -126,10 +139,10 @@ if __name__ == '__main__':
     # dump debug gif image
     bridge = CvBridge()
 
-    def convert(msg):
-        bridge.imgmsg_to_cv2(msg, desired_encoding='passthrough')
+    def convert(msg) -> np.ndarray:
+        return bridge.imgmsg_to_cv2(msg, desired_encoding='passthrough')
 
-    debug_images = [result[1] for result in results]
+    debug_images = [result.get_ros_debug_image() for result in results]
     images = list(map(convert, debug_images))
     clip = ImageSequenceClip(images, fps=20)
     clip.write_gif(debug_file_name, fps=20)
