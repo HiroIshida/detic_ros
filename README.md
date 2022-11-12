@@ -51,7 +51,7 @@ docker run --rm --net=host -it --gpus 1 detic_ros:latest \
     roslaunch detic_ros sample_detection.launch \
     debug:=true \
     vocabulary:=custom \
-    custom_vocabulary:=bottle,cup \'
+    custom_vocabulary:=bottle,cup'
 ```
 
 ### custom vocabulary
