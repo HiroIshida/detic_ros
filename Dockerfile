@@ -60,7 +60,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     ros-noetic-ros-base=1.5.0-1* \
     && rm -rf /var/lib/apt/lists/*
 
-RUN apt update && apt install python3-osrf-pycommon python3-catkin-tools -y
+RUN apt update && apt install python3-osrf-pycommon python3-catkin-tools python3-wstool -y
 RUN apt update && apt install ros-noetic-jsk-tools -y
 RUN apt update && apt install ros-noetic-image-transport-plugins -y
 
@@ -76,18 +76,28 @@ SHELL ["/bin/bash", "-c"]
 RUN sudo apt install python3-pip -y
 RUN pip3 install torch==1.9.0+cu111 torchvision==0.10.0+cu111 torchaudio==0.9.0 -f https://download.pytorch.org/whl/torch_stable.html 
 
-
+########################################
+########### WORKSPACE BUILD ############
+########################################
 # Installing catkin package
 RUN mkdir -p ~/detic_ws/src
 COPY --chown=user . /home/user/detic_ws/src/detic_ros
 RUN sudo apt install -y wget
 RUN sudo rosdep init && rosdep update && sudo apt update
-RUN cd ~/detic_ws/src/detic_ros && source /opt/ros/noetic/setup.bash && rosdep install --from-paths . -i -r -y
-RUN cd ~/detic_ws/src/detic_ros && ./prepare.sh
-RUN cd ~/detic_ws &&\
+RUN cd ~/detic_ws/src &&\
     source /opt/ros/noetic/setup.bash &&\
-    catkin build
+    wstool init &&\
+    wstool merge detic_ros/rosinstall.noetic &&\
+    wstool update &&\
+    rosdep install --from-paths . --ignore-src -y -r &&\
+    source /opt/ros/noetic/setup.bash &&\
+    rosdep install --from-paths . -i -r -y &&\
+    cd ~/detic_ws/src/detic_ros && ./prepare.sh &&\
+    cd ~/detic_ws && catkin init && catkin build
 
+########################################
+########### ENV VARIABLE STUFF #########
+########################################
 RUN touch ~/.bashrc
 RUN echo "source ~/detic_ws/devel/setup.bash" >> ~/.bashrc
 RUN echo 'export PATH="$PATH:$HOME/.local/bin"' >> ~/.bashrc
