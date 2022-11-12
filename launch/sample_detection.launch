@@ -1,6 +1,10 @@
 <launch>
 
-  <arg name="MANAGER" value="detic_detection_manager"/>
+  <arg name="standalone" value="false"/> <!-- debug nodes by setting then standalone -->
+  <arg name="MANAGER" value="detic_detection_manager" unless="$(arg standalone)"/>
+  <arg name="MANAGER" value="" if="$(arg standalone)"/>
+  <arg name="LOAD_STATEMENT" value="load" unless="$(arg standalone)"/>
+  <arg name="LOAD_STATEMENT" value="standalone" if="$(arg standalone)"/>
 
   <arg name="namespace" default="docker" />
 
@@ -26,7 +30,7 @@
     </include>
 
     <node pkg="nodelet" type="nodelet" name="decompress_points"
-          args="load depth_image_proc/point_cloud_xyzrgb $(arg MANAGER)">
+          args="$(arg LOAD_STATEMENT) depth_image_proc/point_cloud_xyzrgb $(arg MANAGER)">
       <remap from="rgb/camera_info" to="$(arg input_camera_info)"/>
       <remap from="rgb/image_rect_color" to="$(arg _input_image)"/>
       <remap from="depth_registered/image_rect" to="$(arg _input_depth)"/>
@@ -47,7 +51,7 @@
 
     <node name="detic_label_image_to_indices"
           pkg="nodelet" type="nodelet"
-          args="load jsk_pcl_utils/LabelToClusterPointIndices $(arg MANAGER)">
+          args="$(arg LOAD_STATEMENT) jsk_pcl_utils/LabelToClusterPointIndices $(arg MANAGER)">
       <remap from="~input" to="detic_segmentor/segmentation"/>
       <remap from="~output" to="detic_segmentor/indices"/>
     </node>
@@ -55,7 +59,7 @@
     <!-- cluster_filter: 1 may be unstable? jsk_recognition/#2737 -->
     <node name="detic_euclidean_clustering"
           pkg="nodelet" type="nodelet"
-          args="load jsk_pcl/EuclideanClustering $(arg MANAGER)"
+          args="$(arg LOAD_STATEMENT) jsk_pcl/EuclideanClustering $(arg MANAGER)"
           clear_params="true">
       <remap from="~input" to="depth_registered/points"/>
       <remap from="~input/cluster_indices" to="detic_segmentor/indices"/>
@@ -72,7 +76,7 @@
 
     <node name="detic_cluster_point_indices_decomposer"
           pkg="nodelet" type="nodelet"
-          args="load jsk_pcl/ClusterPointIndicesDecomposer $(arg MANAGER)"
+          args="$(arg LOAD_STATEMENT) jsk_pcl/ClusterPointIndicesDecomposer $(arg MANAGER)"
           clear_params="true">
       <remap from="~input" to="depth_registered/points"/>
       <remap from="~target" to="detic_euclidean_clustering/output"/>
