@@ -56,7 +56,7 @@
       <remap from="~output" to="detic_segmentor/indices"/>
     </node>
 
-    <!-- cluster_filter: 1 may be unstable? jsk_recognition/#2737 -->
+    <!-- cluster_filter: 1 is desirable, but only stable with jsk_recognition/#2739 -->
     <node name="detic_euclidean_clustering"
           pkg="nodelet" type="nodelet"
           args="$(arg LOAD_STATEMENT) jsk_pcl/EuclideanClustering $(arg MANAGER)"
@@ -68,7 +68,6 @@
         tolerance: 0.03
         min_size: 10
         downsample_enable: true
-        cluster_filter: 1
         approximate_sync: true
         queue_size: 100
       </rosparam>
