@@ -4,12 +4,12 @@ detectron2
 # Copied from Detic
 opencv-python==4.5.5.62
 timm==0.5.4
-dataclasses==0.6
+dataclasses  # remove version specification for local install
 ftfy==6.0.3
 regex==2022.1.18
 fasttext==0.9.2
 scikit-learn==1.0.2
-numpy==1.19
+numpy  # remove version specification for local install
 lvis==0.5.3
 nltk==3.6.7
 git+https://github.com/openai/CLIP.git
