@@ -42,7 +42,7 @@ docker run --rm --net=host -it --gpus 1 detic_ros:latest \
 ```
 Change the `pr1040` part and `/kinect_head/rgb/image_color` in command above by your custom host name and an image topic. If compressed image (e.g. `/kinect_head/rgb/image_color/compressed`) corresponding to the specified `input_image` is also published, by setting `compressed:=true`, you can reduce the topic pub-sub latency. device is set to `auto` by default. But you can specify either from `cpu` or `cuda`.
 
-Example for running three dimensional object pose detection on pr1040 (**you will need to install additional dependencies**, see comments in [Dockerfile](https://github.com/HiroIshida/detic_ros/blob/master/Dockerfile) for more details):
+Example for running three dimensional object pose detection on pr1040 :
 ```bash
 docker run --rm --net=host -it --gpus 1 detic_ros:latest \
     /bin/bash -i -c \
@@ -51,7 +51,7 @@ docker run --rm --net=host -it --gpus 1 detic_ros:latest \
     roslaunch detic_ros sample_detection.launch \
     debug:=true \
     vocabulary:=custom \
-    custom_vocabulary:=bottle,cup \
+    custom_vocabulary:=bottle,cup \'
 ```
 
 ### custom vocabulary
