@@ -15,8 +15,8 @@ from detic_ros.srv import DeticSeg, DeticSegRequest, DeticSegResponse
 class DeticRosNode:
     detic_wrapper: DeticWrapper
     sub: Subscriber
-    pub_debug_image: Publisher
-    pub_debug_segmentation_image: Publisher
+    pub_debug_image: Optional[Publisher]
+    pub_debug_segmentation_image: Optional[Publisher]
     pub_info: Publisher
     pub_segimg: Publisher
     pub_labels: Publisher
@@ -55,23 +55,28 @@ class DeticRosNode:
 
     def callback_image(self, msg: Image):
         # Inference
-        seg_img, labels, scores, vis_img = self.detic_wrapper.inference_step(msg)
+        raw_result = self.detic_wrapper.infer(msg)
 
         # Publish main topics
         if self.detic_wrapper.node_config.use_jsk_msgs:
+            seg_img = raw_result.get_ros_segmentaion_image()
+            labels = raw_result.get_label_array()
+            scores = raw_result.get_score_array()
             self.pub_segimg.publish(seg_img)
-            self.pub_labels.publish(self.detic_wrapper.get_label_array(labels))
-            self.pub_score.publish(self.detic_wrapper.get_score_array(scores))
+            self.pub_labels.publish(labels)
+            self.pub_score.publish(scores)
         else:
-            seg_info = self.detic_wrapper.get_segmentation_info(seg_img, labels, scores)
+            seg_info = raw_result.get_segmentation_info()
             self.pub_info.publish(seg_info)
 
         # Publish optional topics
-        if self.pub_debug_image is not None and vis_img is not None:
-            debug_img = self.detic_wrapper.get_debug_img(vis_img)
+
+        if self.pub_debug_image is not None:
+            debug_img = raw_result.get_ros_debug_image()
             self.pub_debug_image.publish(debug_img)
+
         if self.pub_debug_segmentation_image is not None:
-            debug_seg_img = self.detic_wrapper.get_debug_segimg()
+            debug_seg_img = raw_result.get_ros_debug_segmentation_img()
             self.pub_debug_segmentation_image.publish(debug_seg_img)
 
         # Print debug info
@@ -81,12 +86,15 @@ class DeticRosNode:
 
     def callback_srv(self, req: DeticSegRequest) -> DeticSegResponse:
         msg = req.image
-        seginfo, debug_img, _ = self.detic_wrapper.infer(msg)
+        raw_result = self.detic_wrapper.infer(msg)
+        seginfo = raw_result.get_segmentation_info()
 
         resp = DeticSegResponse()
         resp.seg_info = seginfo
-        if debug_img is not None:
-            resp.debug_image = debug_img
+
+        if raw_result.visualization is not None:
+            debug_image = raw_result.get_ros_debug_segmentation_img()
+            resp.debug_image = debug_image
         return resp
 
 
