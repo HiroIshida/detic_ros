@@ -15,12 +15,17 @@ from detic_ros.srv import DeticSeg, DeticSegRequest, DeticSegResponse
 class DeticRosNode:
     detic_wrapper: DeticWrapper
     sub: Subscriber
+    # some debug image publisher
     pub_debug_image: Optional[Publisher]
     pub_debug_segmentation_image: Optional[Publisher]
-    pub_info: Publisher
-    pub_segimg: Publisher
-    pub_labels: Publisher
-    pub_score: Publisher
+
+    # used when you set use_jsk_msgs = True
+    pub_segimg: Optional[Publisher]
+    pub_labels: Optional[Publisher]
+    pub_score: Optional[Publisher]
+
+    # otherwise, the following publisher will be used
+    pub_info: Optional[Publisher]
 
     def __init__(self, node_config: Optional[NodeConfig] = None):
         if node_config is None:
@@ -59,6 +64,10 @@ class DeticRosNode:
 
         # Publish main topics
         if self.detic_wrapper.node_config.use_jsk_msgs:
+            # assertion for mypy
+            assert self.pub_segimg is not None
+            assert self.pub_labels is not None
+            assert self.pub_score is not None
             seg_img = raw_result.get_ros_segmentaion_image()
             labels = raw_result.get_label_array()
             scores = raw_result.get_score_array()
@@ -66,6 +75,7 @@ class DeticRosNode:
             self.pub_labels.publish(labels)
             self.pub_score.publish(scores)
         else:
+            assert self.pub_info is not None
             seg_info = raw_result.get_segmentation_info()
             self.pub_info.publish(seg_info)
 
