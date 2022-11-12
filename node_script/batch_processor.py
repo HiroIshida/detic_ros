@@ -129,7 +129,7 @@ if __name__ == '__main__':
                                        False, True, False, False, False,
                                        confidence_threshold, device)
     detic_wrapper = DeticWrapper(node_config)
-    results = [detic_wrapper.inference_step(image) for image in tqdm.tqdm(image_list)]
+    results = [detic_wrapper.infer(image) for image in tqdm.tqdm(image_list)]
 
     if output_format == 'pkl':
         dump_result_as_pickle(results, image_list, output_file_name)

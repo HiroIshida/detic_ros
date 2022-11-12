@@ -55,7 +55,7 @@ class DeticRosNode:
 
     def callback_image(self, msg: Image):
         # Inference
-        raw_result = self.detic_wrapper.inference_step(msg)
+        raw_result = self.detic_wrapper.infer(msg)
 
         # Publish main topics
         if self.detic_wrapper.node_config.use_jsk_msgs:
@@ -86,7 +86,7 @@ class DeticRosNode:
 
     def callback_srv(self, req: DeticSegRequest) -> DeticSegResponse:
         msg = req.image
-        raw_result = self.detic_wrapper.inference_step(msg)
+        raw_result = self.detic_wrapper.infer(msg)
         seginfo = raw_result.get_segmentation_info()
 
         resp = DeticSegResponse()

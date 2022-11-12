@@ -18,6 +18,9 @@ from std_msgs.msg import Header
 from detic_ros.msg import SegmentationInfo
 
 
+_cv_bridge = CvBridge()
+
+
 @dataclass(frozen=True)
 class InferenceRawResult:
     segmentation_raw_image: np.ndarray
@@ -28,23 +31,22 @@ class InferenceRawResult:
     class_names: List[str]
 
     def get_ros_segmentaion_image(self) -> Image:
-        seg_img = CvBridge().cv2_to_imgmsg(self.segmentation_raw_image, encoding="32SC1")
+        seg_img = _cv_bridge.cv2_to_imgmsg(self.segmentation_raw_image, encoding="32SC1")
         seg_img.header = self.header
         return seg_img
 
     def get_ros_debug_image(self) -> Image:
         message = "you didn't configure the wrapper so that it computes the debug images"
         assert self.visualization is not None, message
-        debug_img = CvBridge().cv2_to_imgmsg(
+        debug_img = _cv_bridge.cv2_to_imgmsg(
             self.visualization.get_image(), encoding="rgb8")
         debug_img.header = self.header
         return debug_img
 
     def get_ros_debug_segmentation_img(self) -> Image:
-        # Call after inference_step
         human_friendly_scaling = 255 // self.segmentation_raw_image.max()
         new_data = (self.segmentation_raw_image * human_friendly_scaling).astype(np.uint8)
-        debug_seg_img = CvBridge().cv2_to_imgmsg(new_data, encoding="mono8")
+        debug_seg_img = _cv_bridge.cv2_to_imgmsg(new_data, encoding="mono8")
         assert self.header is not None
         debug_seg_img.header = self.header
         return debug_seg_img
@@ -71,10 +73,7 @@ class InferenceRawResult:
 class DeticWrapper:
     predictor: VisualizationDemo
     node_config: NodeConfig
-    bridge: CvBridge
     class_names: List[str]
-    header: Optional[Header]
-    data: Optional[np.ndarray]
 
     class DummyArgs:
         vocabulary: str
@@ -91,21 +90,20 @@ class DeticWrapper:
 
         self.predictor = VisualizationDemo(detectron_cfg, dummy_args)
         self.node_config = node_config
-        self.bridge = CvBridge()
         self.class_names = self.predictor.metadata.get("thing_classes", None)
 
     @staticmethod
     def _adhoc_hack_metadata_path():
-        # because original BUILDIN_CLASSIFIER is somehow posi-dep
+        # because original BUILDIN_CLASSIFIER is somehow position dependent
         rospack = rospkg.RosPack()
         pack_path = rospack.get_path('detic_ros')
         path_dict = detic.predictor.BUILDIN_CLASSIFIER
         for key in path_dict.keys():
             path_dict[key] = os.path.join(pack_path, path_dict[key])
 
-    def inference_step(self, msg: Image) -> InferenceRawResult:
+    def infer(self, msg: Image) -> InferenceRawResult:
         # Segmentation image, detected classes, detection scores, visualization image
-        img = self.bridge.imgmsg_to_cv2(msg, desired_encoding='passthrough')
+        img = _cv_bridge.imgmsg_to_cv2(msg, desired_encoding='passthrough')
 
         if self.node_config.verbose:
             time_start = rospy.Time.now()
