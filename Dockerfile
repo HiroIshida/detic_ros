@@ -1,4 +1,5 @@
 FROM nvidia/cuda:11.2.0-devel-ubuntu20.04
+ENV DEBIAN_FRONTEND=noninteractive
 RUN rm /etc/apt/sources.list.d/cuda.list
 
 RUN echo 'Etc/UTC' > /etc/timezone && \
@@ -46,12 +47,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     ros-noetic-ros-core=1.5.0-1* \
     && rm -rf /var/lib/apt/lists/*
 
-# # install launch/sample_detection.launch dependencies
-# RUN apt-get install -y --no-install-recommends \
-#     ros-noetic-jsk-pcl-ros \
-#     ros-noetic-jsk-pcl-ros-utils \
-#     && rm -rf /var/lib/apt/lists/*
-
 # install bootstrap tools
 RUN apt-get update && apt-get install --no-install-recommends -y \
     build-essential \
@@ -68,6 +63,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 RUN apt update && apt install python3-osrf-pycommon python3-catkin-tools -y
 RUN apt update && apt install ros-noetic-jsk-tools -y
 RUN apt update && apt install ros-noetic-image-transport-plugins -y
+
+# install launch/sample_detection.launch dependencies
+RUN apt update && apt install ros-noetic-jsk-pcl-ros ros-noetic-jsk-pcl-ros-utils -y
 
 WORKDIR /home/user
 
