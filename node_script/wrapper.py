@@ -102,7 +102,7 @@ class DeticWrapper:
 
     def infer(self, msg: Image) -> InferenceRawResult:
         # Segmentation image, detected classes, detection scores, visualization image
-        img = _cv_bridge.imgmsg_to_cv2(msg, desired_encoding='passthrough')
+        img = _cv_bridge.imgmsg_to_cv2(msg, desired_encoding='bgr8')
 
         if self.node_config.verbose:
             time_start = rospy.Time.now()
