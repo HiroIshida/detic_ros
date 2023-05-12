@@ -1,8 +1,8 @@
 [flake8]
 ignore = 
-    I, H # follow isort 
-    E501  # max length should be checked by black
-    E203  # https://github.com/psf/black/issues/315
-    W503  # https://github.com/psf/black/issues/52
-    E402  # because we can't avoid sys.path.append stuff
-    A, B, C, CNL, D, Q  # external plugins if installed
+    I, H,
+    E501,
+    E203,
+    W503,
+    E402,
+    A, B, C, CNL, D, Q
