@@ -74,16 +74,16 @@ CMD /bin/bash
 SHELL ["/bin/bash", "-c"]
 
 RUN sudo apt install python3-pip -y
-RUN pip3 install torch==1.9.0+cu111 torchvision==0.10.0+cu111 torchaudio==0.9.0 -f https://download.pytorch.org/whl/torch_stable.html 
+RUN pip3 install torch==1.9.0+cu111 torchvision==0.10.0+cu111 torchaudio==0.9.0 -f https://download.pytorch.org/whl/torch_stable.html
 
 ########################################
 ########### WORKSPACE BUILD ############
 ########################################
 # Installing catkin package
 RUN mkdir -p ~/detic_ws/src
-COPY --chown=user . /home/user/detic_ws/src/detic_ros
 RUN sudo apt install -y wget
 RUN sudo rosdep init && rosdep update && sudo apt update
+COPY --chown=user . /home/user/detic_ws/src/detic_ros
 RUN cd ~/detic_ws/src &&\
     source /opt/ros/noetic/setup.bash &&\
     wstool init &&\
@@ -101,7 +101,5 @@ RUN cd ~/detic_ws/src &&\
 RUN touch ~/.bashrc
 RUN echo "source ~/detic_ws/devel/setup.bash" >> ~/.bashrc
 RUN echo 'export PATH="$PATH:$HOME/.local/bin"' >> ~/.bashrc
-
-RUN pip3 install torch==1.9.0+cu111 torchvision==0.10.0+cu111 torchaudio==0.9.0 -f https://download.pytorch.org/whl/torch_stable.html
 
 CMD ["bash"]
