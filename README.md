@@ -1,4 +1,4 @@
-## detic_ros [![rostest](https://github.com/HiroIshida/detic_ros/actions/workflows/docker_build.yml/badge.svg)](https://github.com/HiroIshida/detic_ros/actions/workflows/docker_build.yml)
+## detic_ros [![rostest](https://github.com/HiroIshida/detic_ros/actions/workflows/docker_build.yml/badge.svg)](https://github.com/HiroIshida/detic_ros/actions/workflows/docker_build.yml) [![peripheral](https://github.com/HiroIshida/detic_ros/actions/workflows/peripheral.yml/badge.svg)](https://github.com/HiroIshida/detic_ros/actions/workflows/peripheral.yml)
 
 ROS package for [Detic](https://github.com/facebookresearch/Detic). Run on both CPU and GPU, GPU is way performant, but work fine also with CPU (take few seconds to process single image).
 
