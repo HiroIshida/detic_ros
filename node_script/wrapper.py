@@ -119,20 +119,31 @@ class DeticWrapper:
             rospy.loginfo('elapsed time to inference {}'.format(time_elapsed))
             rospy.loginfo('detected {} classes'.format(len(instances)))
 
+        pred_masks = list(instances.pred_masks)
+        scores = instances.scores.tolist()
+        class_indices = instances.pred_classes.tolist()
+
+        if self.node_config.output_highest:
+            best_index = np.argmax(scores)
+            pred_masks = [pred_masks[best_index]]
+            scores = [scores[best_index]]
+            class_indices = [class_indices[best_index]]
+
+            if self.node_config.verbose:
+                rospy.loginfo("{} with highest score {}".format(self.class_names[class_indices[0]], scores[best_index]))
+
         # Initialize segmentation data
         data = np.zeros((img.shape[0], img.shape[1]), dtype=np.int32)
 
         # largest to smallest order to reduce occlusion.
-        sorted_index = np.argsort([-mask.sum() for mask in instances.pred_masks])
+        sorted_index = np.argsort([-mask.sum() for mask in pred_masks])
         for i in sorted_index:
-            mask = instances.pred_masks[i]
+            mask = pred_masks[i]
             # label 0 is reserved for background label, so starting from 1
             data[mask] = (i + 1)
 
         # Get class and score arrays
-        class_indices = instances.pred_classes.tolist()
         detected_classes_names = [self.class_names[i] for i in class_indices]
-        scores = instances.scores.tolist()
         result = InferenceRawResult(
             data,
             class_indices,
