@@ -27,6 +27,7 @@ class NodeConfig:
     model_weights_path: str
     confidence_threshold: float
     device_name: str
+    output_highest: bool = True
 
     model_names = {
         'swin': 'Detic_LCOCOI21k_CLIP_SwinB_896b32_4x_ft4x_max-size',
@@ -47,7 +48,8 @@ class NodeConfig:
             confidence_threshold: float = 0.5,
             device_name: str = 'auto',
             vocabulary: str = 'lvis',
-            custom_vocabulary: str = ''):
+            custom_vocabulary: str = '',
+            output_highest: bool = False):
 
         if device_name == 'auto':
             device_name = 'cuda' if torch.cuda.is_available() else 'cpu'
@@ -77,7 +79,8 @@ class NodeConfig:
             default_detic_config_path,
             default_model_weights_path,
             confidence_threshold,
-            device_name)
+            device_name,
+            output_highest)
 
     @classmethod
     def from_rosparam(cls):
@@ -92,7 +95,8 @@ class NodeConfig:
             rospy.get_param('~confidence_threshold', 0.5),
             rospy.get_param('~device', 'auto'),
             rospy.get_param('~vocabulary', 'lvis'),
-            rospy.get_param('~custom_vocabulary', ''))
+            rospy.get_param('~custom_vocabulary', ''),
+            rospy.get_param('~output_highest', False))
 
     def to_detectron_config(self):
         cfg = get_cfg()

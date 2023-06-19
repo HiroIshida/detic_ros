@@ -12,6 +12,7 @@
   <arg name="device" default="auto" />
   <arg name="vocabulary" default="lvis" />
   <arg name="custom_vocabulary" default="" />
+  <arg name="output_highest" default="false" />
 
   <arg name="_input_image" default="/$(arg namespace)/decompressed_image" if="$(arg compressed)"/>
   <arg name="_input_image" default="$(arg input_image)" unless="$(arg compressed)"/>
@@ -36,6 +37,7 @@
     <param name="device" value="$(arg device)"/>
     <param name="vocabulary" value="$(arg vocabulary)" />
     <param name="custom_vocabulary" value="$(arg custom_vocabulary)" />
+    <param name="output_highest" value="$(arg output_highest)" />
     </node>
   </group>
 </launch>
