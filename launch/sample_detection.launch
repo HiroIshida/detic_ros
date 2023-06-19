@@ -1,6 +1,6 @@
 <launch>
 
-  <arg name="standalone" value="false"/> <!-- debug nodes by setting then standalone -->
+  <arg name="standalone" default="false"/> <!-- debug nodes by setting then standalone -->
   <arg name="MANAGER" value="detic_detection_manager" unless="$(arg standalone)"/>
   <arg name="MANAGER" value="" if="$(arg standalone)"/>
   <arg name="LOAD_STATEMENT" value="load" unless="$(arg standalone)"/>
