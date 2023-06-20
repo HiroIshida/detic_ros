@@ -28,6 +28,9 @@
     <include file="$(find detic_ros)/launch/decompress_depth.launch">
       <arg name="input_image" value="$(arg input_image)"/>
       <arg name="input_depth" value="$(arg input_depth)"/>
+      <rosparam>
+        queue_size: 100
+      </rosparam>
     </include>
 
     <node pkg="nodelet" type="nodelet" name="decompress_points"
