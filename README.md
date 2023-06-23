@@ -1,4 +1,4 @@
-## detic_ros [![rostest](https://github.com/HiroIshida/detic_ros/actions/workflows/docker_build.yml/badge.svg)](https://github.com/HiroIshida/detic_ros/actions/workflows/docker_build.yml) [![peripheral](https://github.com/HiroIshida/detic_ros/actions/workflows/peripheral.yml/badge.svg)](https://github.com/HiroIshida/detic_ros/actions/workflows/peripheral.yml)
+# detic_ros [![rostest](https://github.com/HiroIshida/detic_ros/actions/workflows/docker_build.yml/badge.svg)](https://github.com/HiroIshida/detic_ros/actions/workflows/docker_build.yml) [![peripheral](https://github.com/HiroIshida/detic_ros/actions/workflows/peripheral.yml/badge.svg)](https://github.com/HiroIshida/detic_ros/actions/workflows/peripheral.yml)
 
 ROS package for [Detic](https://github.com/facebookresearch/Detic). Run on both CPU and GPU, GPU is way performant, but work fine also with CPU (take few seconds to process single image).
 
@@ -12,9 +12,7 @@ example of three dimensional pose recognition for cups, bottles, and bottle caps
 
 <img src='https://user-images.githubusercontent.com/20625381/199499891-c5b66103-0de1-4619-ad64-0d1571efba92.png' width=50%>
 
-## Running as a node
-
-### step1 (build docker container and launch Detic-segmentor node)
+## step1: build docker container
 *Ofcourse you can build this pacakge on your workspace and launch as normal ros package. But for those using CUDA, the following docker based approach might be safer and easy.*
 
 
@@ -26,53 +24,43 @@ git clone https://github.com/HiroIshida/detic_ros.git
 cd detic_ros
 docker build -t detic_ros .
 ```
-
+## step2: launch Detic-segmentor node
 Example for running node on pr1040 (**please replace `pr1040` by you robot hostname or `localhost`**):
 ```bash
-docker run --rm --net=host -it --gpus 1 detic_ros:latest \
-    /bin/bash -i -c \
-    'source ~/.bashrc; \
-    rossetip; rossetmaster pr1040; \
-    roslaunch detic_ros sample.launch \
+python3 run_container.py -host pr1040 -mount ./launch -name sample.launch \
     out_debug_img:=true \
     out_debug_segimg:=false \
     compressed:=false \
     device:=auto \
-    input_image:=/kinect_head/rgb/image_color'
+    input_image:=/kinect_head/rgb/image_color
 ```
-Change the `pr1040` part and `/kinect_head/rgb/image_color` in command above by your custom host name and an image topic. If compressed image (e.g. `/kinect_head/rgb/image_color/compressed`) corresponding to the specified `input_image` is also published, by setting `compressed:=true`, you can reduce the topic pub-sub latency. device is set to `auto` by default. But you can specify either from `cpu` or `cuda`.
+The minimum necessary argument of `run_container.py` is `host`, `mount` and `name`:
+- host: host name or IP address
+- mount: launch file or launch file's directory path that will be mounted inside the container. In this example, launch file directory of this repository is mounted.
+- name: launch file name that will be searched from mounted file or directory
+Also, you can specify launch args as the roslaunch command (e.g. `out_debug_img:=true`). This launch args must come after the above three args.
 
-Example for running three dimensional object pose detection on pr1040 :
+Another example for running three dimensional object pose detection using point cloud filtered by segmentation.
 ```bash
-docker run --rm --net=host -it --gpus 1 detic_ros:latest \
-    /bin/bash -i -c \
-    'source ~/.bashrc; \
-    rossetip; rossetmaster pr1040; \
-    roslaunch detic_ros sample_detection.launch \
+python3 run_container.py -host pr1040 -mount ./launch -name sample_detection.launch \
     debug:=true \
     vocabulary:=custom \
-    custom_vocabulary:=bottle,cup'
+    custom_vocabulary:=bottle,cup
 ```
+As in this example, by putting required sub-launch files inside the directory that will be mounted on, you can combine many node inside the container.
 
-### custom vocabulary
-Add additional arguments to the script above. example: `vocabulary:='custom' custom_vocabulary:='bottle,shoe'`. 
+### Note:
+- On custom vocabulary: if you want to limit the detected instances by custom vocabulary, please set launch args to `vocabulary:='custom' custom_vocabulary:='bottle,shoe'`. 
+- On model types: Detic is trained in different model types. In this repository you can try out all of the [real-time models](https://github.com/facebookresearch/Detic/blob/main/docs/MODEL_ZOO.md#real-time-models) using the `model_type` parameter.
+- On real-time performance: For higher recognition frequencies turn off all debug info, run on GPU, decompress topics locally, use smaller models (*e.g.* `res50`), and avoid having too many classes in the frame (by *e.g.* setting a custom vocabulary or higher confidence thresholds). The `sample_detection.launch` with default parameters handles all of this, yielding object bounding boxes at **around 10Hz**.
 
-### model types
-Detic is trained in different model types. In this repository you can try out all of the [real-time models](https://github.com/facebookresearch/Detic/blob/main/docs/MODEL_ZOO.md#real-time-models) using the `model_type` parameter.
-
-### running with higher frequency
-
-For higher recognition frequencies turn off all debug info, run on GPU, decompress topics locally, use smaller models (*e.g.* `res50`), and avoid having too many classes in the frame (by *e.g.* setting a custom vocabulary or higher confidence thresholds).
-
-The `sample_detection.launch` with default parameters handles all of this, yielding object bounding boxes at around 10Hz.
-
-### step2a (Subscribe from node in step1 and do something)
+## step3a (Subscribe from node in step3 and do anything you want)
 Example for using the published topic from the node above is [masked_image_publisher.py](./example/masked_image_publisher.py). This will be helpful for understanding how to apply `SegmentationInfo` message to a image. The [test file](/test/test_node.test) for this example also might be helpful.
 
-### step2b (Service call)
+## step3b (Service call)
 See definition of [`srv/DeticSeg.srv`](srv/DeticSeg.srv)
 
-### ROS node information
+## ROS node information
 - `~input_image` (`sensor_msgs/Image`)
   - Input image
 - `~debug_image` (`sensor_msgs/Image`)
@@ -90,7 +78,7 @@ See definition of [`srv/DeticSeg.srv`](srv/DeticSeg.srv)
 
 As for rosparam, see [node_cofig.py](./node_script/node_config.py).
 
-### Running without roscore to batch processing a bag file
+## Running without roscore to batch processing a bag file
 ```bash
 rosrun detic_ros batch_processor.py path/to/bagfile
 ```
