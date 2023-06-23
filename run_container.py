@@ -6,7 +6,6 @@ import os
 import re
 import shutil
 import subprocess
-import uuid
 from pathlib import Path
 from tempfile import TemporaryDirectory
 from typing import Optional
@@ -46,8 +45,6 @@ if __name__ == "__main__":
         assert bool(re.match(r".*:=.*", launch_arg))
     launch_args = " ".join(args.launch_args)
 
-    prefix_uuidval = str(uuid.uuid4())
-
     with TemporaryDirectory() as td:
         tmp_launch_path = Path(td) / "launch"
 
@@ -56,12 +53,9 @@ if __name__ == "__main__":
         else:
             shutil.copyfile(mount_path, tmp_launch_path)
 
-        for file_path in tmp_launch_path.iterdir():
-            os.rename(file_path, add_prefix(file_path, prefix_uuidval))
-
         docker_run_command = """
             docker run \
-                -v {tmp_launch_path}:{detic_ros_root}/launch_mounted \
+                -v {tmp_launch_path}:{detic_ros_root}/launch \
                 --rm --net=host -it \
                 --gpus 1 detic_ros:latest \
                 /bin/bash -i -c \
@@ -73,7 +67,7 @@ if __name__ == "__main__":
             tmp_launch_path=tmp_launch_path,
             detic_ros_root=_DETIC_ROS_ROOT,
             host=args.host,
-            launch_file_name=(prefix_uuidval + launch_file_name),
+            launch_file_name=launch_file_name,
             launch_args=launch_args,
         )
         subprocess.call(docker_run_command, shell=True)
