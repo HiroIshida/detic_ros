@@ -22,7 +22,7 @@ def add_prefix(file_path: Path, prefix: str) -> Path:
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        "-inject", type=str, help="injecting launch file or directory path"
+        "-mount", type=str, help="mount source launch file or directory"
     )
     parser.add_argument("-name", type=str, help="launch file name")
     parser.add_argument(
@@ -35,9 +35,9 @@ if __name__ == "__main__":
     )
     args = parser.parse_args()
 
-    inject_path_str: Optional[str] = args.inject
-    assert inject_path_str is not None
-    inject_path = Path(inject_path_str)
+    mount_path_str: Optional[str] = args.mount
+    assert mount_path_str is not None
+    mount_path = Path(mount_path_str)
 
     launch_file_name: Optional[str] = args.name
     assert launch_file_name is not None
@@ -51,17 +51,17 @@ if __name__ == "__main__":
     with TemporaryDirectory() as td:
         tmp_launch_path = Path(td) / "launch"
 
-        if inject_path.is_dir():
-            shutil.copytree(inject_path, tmp_launch_path)
+        if mount_path.is_dir():
+            shutil.copytree(mount_path, tmp_launch_path)
         else:
-            shutil.copyfile(inject_path, tmp_launch_path)
+            shutil.copyfile(mount_path, tmp_launch_path)
 
         for file_path in tmp_launch_path.iterdir():
             os.rename(file_path, add_prefix(file_path, prefix_uuidval))
 
         docker_run_command = """
             docker run \
-                -v {tmp_launch_path}:{detic_ros_root}/launch_injected \
+                -v {tmp_launch_path}:{detic_ros_root}/launch_mounted \
                 --rm --net=host -it \
                 --gpus 1 detic_ros:latest \
                 /bin/bash -i -c \
