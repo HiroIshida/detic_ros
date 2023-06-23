@@ -95,6 +95,9 @@ RUN cd ~/detic_ws/src &&\
     cd ~/detic_ws/src/detic_ros && ./prepare.sh &&\
     cd ~/detic_ws && catkin init && catkin build
 
+# to avoid conflcit when mounting
+RUN rm -rf ~/detic_ws/src/detic_ros/launc
+
 ########################################
 ########### ENV VARIABLE STUFF #########
 ########################################
