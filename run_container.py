@@ -3,6 +3,7 @@
 # NOTE: please use only standard libraries
 import argparse
 import os
+import re
 import shutil
 import subprocess
 import uuid
@@ -27,6 +28,11 @@ if __name__ == "__main__":
     parser.add_argument(
         "-host", type=str, default="pr1040", help="host name or ip-address"
     )
+    parser.add_argument(
+        "launch_args",
+        nargs=argparse.REMAINDER,
+        help="launch args in ros style e.g. foo:=var",
+    )
     args = parser.parse_args()
 
     inject_path_str: Optional[str] = args.inject
@@ -35,6 +41,10 @@ if __name__ == "__main__":
 
     launch_file_name: Optional[str] = args.name
     assert launch_file_name is not None
+
+    for launch_arg in args.launch_args:
+        assert bool(re.match(r".*:=.*", launch_arg))
+    launch_args = " ".join(args.launch_args)
 
     prefix_uuidval = str(uuid.uuid4())
 
@@ -58,12 +68,12 @@ if __name__ == "__main__":
                 "source ~/.bashrc; \
                 roscd detic_ros; \
                 rossetip; rossetmaster {host}; \
-                roslaunch detic_ros {launch_file_name}"
+                roslaunch detic_ros {launch_file_name} {launch_args}"
                 """.format(
             tmp_launch_path=tmp_launch_path,
             detic_ros_root=_DETIC_ROS_ROOT,
             host=args.host,
             launch_file_name=(prefix_uuidval + launch_file_name),
+            launch_args=launch_args,
         )
-        print(docker_run_command)
         subprocess.call(docker_run_command, shell=True)
