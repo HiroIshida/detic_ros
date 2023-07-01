@@ -32,6 +32,8 @@ class DeticRosNode:
         if node_config is None:
             node_config = NodeConfig.from_rosparam()
 
+        rospy.loginfo("node_config: {}".format(node_config))
+
         self.detic_wrapper = DeticWrapper(node_config)
         self.srv_handler = rospy.Service('~segment_image', DeticSeg, self.callback_srv)
 
