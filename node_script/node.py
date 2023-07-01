@@ -6,6 +6,7 @@ from jsk_recognition_msgs.msg import LabelArray, VectorArray
 from node_config import NodeConfig
 from rospy import Publisher, Subscriber
 from sensor_msgs.msg import Image
+import torch
 from wrapper import DeticWrapper
 
 from detic_ros.msg import SegmentationInfo
@@ -55,6 +56,9 @@ class DeticRosNode:
                                                                     Image, queue_size=10)
             else:
                 self.pub_debug_segmentation_image = None
+
+        if node_config.num_torch_thread is not None:
+            torch.set_num_threads(node_config.num_torch_thread)
 
         rospy.loginfo('initialized node')
 

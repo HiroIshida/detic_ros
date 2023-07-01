@@ -1,6 +1,7 @@
 import os
 import sys
 from dataclasses import dataclass
+from typing import Optional
 
 import rospkg
 import rospy
@@ -27,6 +28,7 @@ class NodeConfig:
     model_weights_path: str
     confidence_threshold: float
     device_name: str
+    num_torch_thread: Optional[int]
     output_highest: bool = True
 
     model_names = {
@@ -49,6 +51,7 @@ class NodeConfig:
             device_name: str = 'auto',
             vocabulary: str = 'lvis',
             custom_vocabulary: str = '',
+            num_torch_thread: Optional[int] = None,
             output_highest: bool = False):
 
         if device_name == 'auto':
@@ -80,6 +83,7 @@ class NodeConfig:
             default_model_weights_path,
             confidence_threshold,
             device_name,
+            num_torch_thread,
             output_highest)
 
     @classmethod
@@ -96,6 +100,7 @@ class NodeConfig:
             rospy.get_param('~device', 'auto'),
             rospy.get_param('~vocabulary', 'lvis'),
             rospy.get_param('~custom_vocabulary', ''),
+            rospy.get_param('~num_torch_thread', None),
             rospy.get_param('~output_highest', False))
 
     def to_detectron_config(self):
