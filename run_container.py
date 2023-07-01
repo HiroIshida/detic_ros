@@ -10,7 +10,7 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 from typing import Optional
 
-_DETIC_ROS_ROOT = "/home/user/detic_ws/src/detic_ros"
+_DETIC_ROS_ROOT_INSIDE_CONTAINER = "/home/user/detic_ws/src/detic_ros"
 
 
 def add_prefix(file_path: Path, prefix: str) -> Path:
@@ -65,7 +65,7 @@ if __name__ == "__main__":
                 roslaunch detic_ros {launch_file_name} {launch_args}"
                 """.format(
             tmp_launch_path=tmp_launch_path,
-            detic_ros_root=_DETIC_ROS_ROOT,
+            detic_ros_root=_DETIC_ROS_ROOT_INSIDE_CONTAINER,
             host=args.host,
             launch_file_name=launch_file_name,
             launch_args=launch_args,
