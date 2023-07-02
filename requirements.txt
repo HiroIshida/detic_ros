@@ -1,6 +1,8 @@
 -f https://dl.fbaipublicfiles.com/detectron2/wheels/cu111/torch1.9/index.html
 detectron2
 
+pillow<10.0.0  # After 10.0.0, following error occurs: AttributeError: module 'PIL.Image' has no attribute 'LINEAR' 
+
 # Copied from Detic
 opencv-python==4.5.5.62
 timm==0.5.4
