@@ -47,6 +47,7 @@ python3 run_container.py -host pr1040 -mount ./launch -name sample_detection.lau
     vocabulary:=custom \
     custom_vocabulary:=bottle,cup
 ```
+Or `rosrun detic_ros run_container.py` if you catkin build this package on the hosting computer side.
 As in this example, by putting required sub-launch files inside the directory that will be mounted on, you can combine many node inside the container.
 
 ### Note:
