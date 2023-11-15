@@ -38,6 +38,9 @@
       <remap from="rgb/camera_info" to="$(arg input_camera_info)"/>
       <remap from="rgb/image_rect_color" to="$(arg _input_image)"/>
       <remap from="depth_registered/image_rect" to="$(arg _input_depth)"/>
+      <rosparam>
+        queue_size: 100
+      </rosparam>
     </node>
 
   <node name="detic_segmentor" pkg="detic_ros" type="node.py" output="screen">
