@@ -1,4 +1,3 @@
-ARG INSTALL_JSK_PCL=true
 FROM nvidia/cuda:11.2.2-runtime-ubuntu20.04
 ENV DEBIAN_FRONTEND=noninteractive
 RUN rm /etc/apt/sources.list.d/cuda.list
@@ -68,9 +67,7 @@ RUN apt update && apt install ros-noetic-jsk-tools -y
 RUN apt update && apt install ros-noetic-image-transport-plugins -y
 
 # install launch/sample_detection.launch dependencies if you work with point clouds
-RUN if [ "$INSTALL_ROS_JSK" = "true" ]; then \
-    apt-get update && apt-get install -y ros-noetic-jsk-pcl-ros ros-noetic-jsk-pcl-ros-utils; \
-fi
+RUN apt-get update && apt-get install -y ros-noetic-jsk-pcl-ros ros-noetic-jsk-pcl-ros-utils
 
 WORKDIR /home/user
 
