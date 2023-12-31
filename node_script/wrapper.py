@@ -123,7 +123,7 @@ class DeticWrapper:
         scores = instances.scores.tolist()
         class_indices = instances.pred_classes.tolist()
 
-        if self.node_config.output_highest:
+        if len(scores) > 0 and self.node_config.output_highest:
             best_index = np.argmax(scores)
             pred_masks = [pred_masks[best_index]]
             scores = [scores[best_index]]
