@@ -1,6 +1,8 @@
 FROM nvidia/cuda:11.2.2-runtime-ubuntu20.04
 ENV DEBIAN_FRONTEND=noninteractive
 RUN rm /etc/apt/sources.list.d/cuda.list
+# this arg is maybe set to false for testing purpose (e.g. invoke default launch files from rostest)
+ARG REMOVE_LAUNCH_DIR=true
 
 RUN echo 'Etc/UTC' > /etc/timezone && \
     ln -s /usr/share/zoneinfo/Etc/UTC /etc/localtime && \
@@ -98,7 +100,9 @@ RUN cd ~/detic_ws/src &&\
     cd ~/detic_ws && catkin init && catkin build
 
 # to avoid conflcit when mounting
-RUN rm -rf ~/detic_ws/src/detic_ros/launch
+RUN if [ "$REMOVE_LAUNCH_DIR" = "true" ] ; then \
+    rm -rf ~/detic_ws/src/detic_ros/launch ; \
+fi
 
 ########################################
 ########### ENV VARIABLE STUFF #########
