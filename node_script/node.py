@@ -2,7 +2,7 @@
 from typing import Optional
 
 import rospy
-from jsk_recognition_msgs.msg import LabelArray, VectorArray
+from jsk_recognition_msgs.msg import LabelArray, RectArray, VectorArray
 from node_config import NodeConfig
 from rospy import Publisher, Subscriber
 from sensor_msgs.msg import Image
@@ -24,6 +24,7 @@ class DeticRosNode:
     pub_segimg: Optional[Publisher]
     pub_labels: Optional[Publisher]
     pub_score: Optional[Publisher]
+    pub_rects: Optional[Publisher]
 
     # otherwise, the following publisher will be used
     pub_info: Optional[Publisher]
@@ -45,6 +46,7 @@ class DeticRosNode:
                 self.pub_segimg = rospy.Publisher('~segmentation', Image, queue_size=1)
                 self.pub_labels = rospy.Publisher('~detected_classes', LabelArray, queue_size=1)
                 self.pub_score = rospy.Publisher('~score', VectorArray, queue_size=1)
+                self.pub_rects = rospy.Publisher('~rects', RectArray, queue_size=1)
             else:
                 self.pub_info = rospy.Publisher('~segmentation_info', SegmentationInfo,
                                                 queue_size=1)
@@ -77,9 +79,11 @@ class DeticRosNode:
             seg_img = raw_result.get_ros_segmentaion_image()
             labels = raw_result.get_label_array()
             scores = raw_result.get_score_array()
+            rects = raw_result.get_rect_array()
             self.pub_segimg.publish(seg_img)
             self.pub_labels.publish(labels)
             self.pub_score.publish(scores)
+            self.pub_rects.publish(rects)
         else:
             assert self.pub_info is not None
             seg_info = raw_result.get_segmentation_info()

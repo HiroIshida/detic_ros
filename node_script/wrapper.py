@@ -10,7 +10,7 @@ import torch
 from cv_bridge import CvBridge
 from detectron2.utils.visualizer import VisImage
 from detic.predictor import VisualizationDemo
-from jsk_recognition_msgs.msg import Label, LabelArray, VectorArray
+from jsk_recognition_msgs.msg import Label, LabelArray, Rect, RectArray, VectorArray
 from node_config import NodeConfig
 from sensor_msgs.msg import Image
 from std_msgs.msg import Header
@@ -28,6 +28,7 @@ class InferenceRawResult:
     visualization: Optional[VisImage]
     header: Header
     detected_class_names: List[str]
+    boxes: List[List[float]]
 
     def get_ros_segmentaion_image(self) -> Image:
         seg_img = _cv_bridge.cv2_to_imgmsg(self.segmentation_raw_image, encoding="32SC1")
@@ -67,6 +68,14 @@ class InferenceRawResult:
                                     segmentation=seg_img,
                                     header=self.header)
         return seg_info
+
+    def get_rect_array(self) -> RectArray:
+        rects = [Rect(x=int(box[0]),
+                      y=int(box[1]),
+                      width=int(box[2] - box[0]),
+                      height=int(box[3] - box[1])) for box in self.boxes]
+        rec_arr = RectArray(header=self.header, rects=rects)
+        return rec_arr
 
 
 class DeticWrapper:
@@ -122,12 +131,14 @@ class DeticWrapper:
         pred_masks = list(instances.pred_masks)
         scores = instances.scores.tolist()
         class_indices = instances.pred_classes.tolist()
+        boxes = list(instances.pred_boxes)
 
         if len(scores) > 0 and self.node_config.output_highest:
             best_index = np.argmax(scores)
             pred_masks = [pred_masks[best_index]]
             scores = [scores[best_index]]
             class_indices = [class_indices[best_index]]
+            boxes = [boxes[best_index]]
 
             if self.node_config.verbose:
                 rospy.loginfo("{} with highest score {}".format(self.class_names[class_indices[0]], scores[best_index]))
@@ -150,5 +161,6 @@ class DeticWrapper:
             scores,
             visualized_output,
             msg.header,
-            detected_classes_names)
+            detected_classes_names,
+            boxes)
         return result
