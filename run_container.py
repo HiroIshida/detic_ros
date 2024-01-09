@@ -56,7 +56,7 @@ if __name__ == "__main__":
         docker_run_command = """
             docker run \
                 -v {tmp_launch_path}:{detic_ros_root}/launch \
-                --rm --net=host -it \
+                --rm --net=host \
                 --gpus 1 detic_ros:latest \
                 /bin/bash -i -c \
                 "source ~/.bashrc; \
