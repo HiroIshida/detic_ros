@@ -33,17 +33,23 @@
       </rosparam>
     </include>
 
+    <!-- Sync RGB and Depth -->
+    <node pkg="jsk_topic_tools" type="synchronize_republish.py" name="synchronize_republish">
+      <param name="topics" value="[$(arg _input_image), $(arg _input_depth)]" type="yaml"/>
+      <param name="approximate_sync" value="true" />
+    </node>
+
     <node pkg="nodelet" type="nodelet" name="decompress_points"
           args="$(arg LOAD_STATEMENT) depth_image_proc/point_cloud_xyzrgb $(arg MANAGER)">
       <remap from="rgb/camera_info" to="$(arg input_camera_info)"/>
-      <remap from="rgb/image_rect_color" to="$(arg _input_image)"/>
-      <remap from="depth_registered/image_rect" to="$(arg _input_depth)"/>
+      <remap from="rgb/image_rect_color" to="synchronize_republish/pub_00"/>
+      <remap from="depth_registered/image_rect" to="synchronize_republish/pub_01"/>
       <rosparam>
         queue_size: 100
       </rosparam>
     </node>
 
-  <node name="detic_segmentor" pkg="detic_ros" type="node.py" output="screen">
+    <node name="detic_segmentor" pkg="detic_ros" type="node.py" output="screen">
       <remap from="~input_image" to="$(arg _input_image)"/>
       <param name="enable_pubsub" value="true"/>
       <param name="use_jsk_msgs" value="true"/>
@@ -71,11 +77,12 @@
       <remap from="~input" to="depth_registered/points"/>
       <remap from="~input/cluster_indices" to="detic_segmentor/indices"/>
       <rosparam>
+        cluster_filter: 1
         multi: true
         tolerance: 0.03
-        min_size: 10
+        min_size: 0
         downsample_enable: true
-        approximate_sync: true
+        approximate_sync: false
         queue_size: 100
       </rosparam>
     </node>
@@ -89,12 +96,13 @@
       <remap from="~boxes" to="detic_segmentor/output/boxes"/>
       <remap from="~centroid_pose_array" to="detic_segmentor/output/centroid"/>
       <rosparam subst_value="true">
-        align_boxes: true
+        align_boxes: false
         align_boxes_with_plane: false
+        fill_boxes_label_with_nearest_plane_index: false
         force_to_flip_z_axis: false
         use_pca: false
         target_frame_id: $(arg target_frame_id)
-        approximate_sync: true
+        approximate_sync: false
         queue_size: 100
       </rosparam>
     </node>
