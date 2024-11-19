@@ -107,4 +107,6 @@ RUN touch ~/.bashrc
 RUN echo "source ~/detic_ws/devel/setup.bash" >> ~/.bashrc
 RUN echo 'export PATH="$PATH:$HOME/.local/bin"' >> ~/.bashrc
 
+RUN sudo apt install python-is-python3
+
 CMD ["bash"]

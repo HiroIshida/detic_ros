@@ -96,9 +96,8 @@
       <remap from="~boxes" to="detic_segmentor/output/boxes"/>
       <remap from="~centroid_pose_array" to="detic_segmentor/output/centroid"/>
       <rosparam subst_value="true">
-        align_boxes: false
+        align_boxes: true
         align_boxes_with_plane: false
-        fill_boxes_label_with_nearest_plane_index: false
         force_to_flip_z_axis: false
         use_pca: false
         target_frame_id: $(arg target_frame_id)
