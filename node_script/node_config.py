@@ -71,6 +71,9 @@ class NodeConfig:
             pack_path, 'models',
             model_name + '.pth')
 
+        message = 'custom vocab must be without whitespace. e.g. \'foo,bar\' instead of \'foo, bar\''
+        assert not ' ' in custom_vocabulary, message
+
         return cls(
             enable_pubsub,
             out_debug_img,
