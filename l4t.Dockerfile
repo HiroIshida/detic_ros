@@ -61,6 +61,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
 RUN apt update && apt install python3-osrf-pycommon python3-catkin-tools python3-wstool -y
+
+# Remove OpenCV built with CUDA by NVIDIA. It conflicts with original OpenCV deb
+RUN apt purge opencv-* -y
+
 RUN apt update && apt install ros-noetic-jsk-tools -y
 RUN apt update && apt install ros-noetic-image-transport-plugins -y
 
@@ -80,6 +84,12 @@ SHELL ["/bin/bash", "-c"]
 RUN mkdir -p ~/detic_ws/src
 RUN sudo apt install -y wget
 RUN sudo rosdep init && rosdep update && sudo apt update
+
+# Build detectron2 from source. The aarch64 version is not released
+RUN cd /tmp &&\
+    git clone -b v0.6 https://github.com/facebookresearch/detectron2 &&\
+    pip3 install -e detectron2
+
 COPY --chown=user . /home/user/detic_ws/src/detic_ros
 RUN cd ~/detic_ws/src &&\
     source /opt/ros/noetic/setup.bash &&\
