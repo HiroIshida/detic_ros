@@ -6,11 +6,6 @@ RUN echo 'Etc/UTC' > /etc/timezone && \
     apt-get install -q -y --no-install-recommends tzdata && \
     rm -rf /var/lib/apt/lists/*
 
-RUN apt update 
-
-# install minimum tools:
-RUN apt install -y build-essential sudo git
-
 RUN \
   useradd user && \
   echo "user ALL=(root) NOPASSWD:ALL" > /etc/sudoers.d/user && \
@@ -24,13 +19,17 @@ RUN echo 'user:user' | chpasswd
 
 # install packages
 RUN apt-get update && apt-get install -q -y --no-install-recommends \
+    build-essential \
+    sudo \
+    git \
     dirmngr \
     gnupg2 \
     curl \
+    lsb-release \
+    wget \
     && rm -rf /var/lib/apt/lists/*
 
 # setup sources.list
-RUN sudo apt-get update && apt-get install -y lsb-release
 RUN sudo sh -c 'echo "deb http://packages.ros.org/ros/ubuntu $(lsb_release -sc) main" > /etc/apt/sources.list.d/ros-latest.list'
 
 # setup keys
@@ -39,37 +38,27 @@ RUN curl -s https://raw.githubusercontent.com/ros/rosdistro/master/ros.asc | sud
 # setup environment
 ENV LANG C.UTF-8
 ENV LC_ALL C.UTF-8
-
 ENV ROS_DISTRO noetic
-
-# install ros packages
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    ros-noetic-ros-core=1.5.0-1* \
-    && rm -rf /var/lib/apt/lists/*
-
-# install bootstrap tools
-RUN apt-get update && apt-get install --no-install-recommends -y \
-    build-essential \
-    python3-rosdep \
-    python3-rosinstall \
-    python3-vcstools \
-    && rm -rf /var/lib/apt/lists/*
-
-# install ros packages
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    ros-noetic-ros-base=1.5.0-1* \
-    && rm -rf /var/lib/apt/lists/*
-
-RUN apt update && apt install python3-osrf-pycommon python3-catkin-tools python3-wstool -y
 
 # Remove OpenCV built with CUDA by NVIDIA. It conflicts with original OpenCV deb
 RUN apt purge opencv-* -y
 
-RUN apt update && apt install ros-noetic-jsk-tools -y
-RUN apt update && apt install ros-noetic-image-transport-plugins -y
-
-# install launch/sample_detection.launch dependencies if you work with point clouds
-RUN apt-get update && apt-get install -y ros-noetic-jsk-pcl-ros ros-noetic-jsk-pcl-ros-utils
+# install ros packages
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    ros-noetic-ros-core=1.5.0-1* \
+    ros-noetic-ros-base=1.5.0-1* \
+    build-essential \
+    python3-rosdep \
+    python3-rosinstall \
+    python3-vcstools \
+    ros-noetic-jsk-tools \
+    ros-noetic-image-transport-plugins \
+    python3-osrf-pycommon \
+    python3-catkin-tools \
+    python3-wstool \
+    ros-noetic-jsk-pcl-ros \
+    ros-noetic-jsk-pcl-ros-utils \
+    && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /home/user
 
@@ -82,13 +71,12 @@ SHELL ["/bin/bash", "-c"]
 ########################################
 # Installing catkin package
 RUN mkdir -p ~/detic_ws/src
-RUN sudo apt install -y wget
-RUN sudo rosdep init && rosdep update && sudo apt update
+RUN sudo rosdep init && rosdep update
 
 # Build detectron2 from source. The aarch64 version is not released
 RUN cd /tmp &&\
     git clone -b v0.6 https://github.com/facebookresearch/detectron2 &&\
-    pip3 install -e detectron2
+    pip3 install --no-cache-dir -e detectron2
 
 COPY --chown=user . /home/user/detic_ws/src/detic_ros
 RUN cd ~/detic_ws/src &&\
@@ -96,10 +84,13 @@ RUN cd ~/detic_ws/src &&\
     wstool init &&\
     wstool merge detic_ros/rosinstall.noetic &&\
     wstool update &&\
+    sudo apt update &&\
     rosdep install --from-paths . --ignore-src -y -r &&\
     source /opt/ros/noetic/setup.bash &&\
     rosdep install --from-paths . -i -r -y &&\
     cd ~/detic_ws/src/detic_ros && ./prepare.sh &&\
+    rm -rf ~/.cache/pip &&\
+    sudo rm -rf /var/lib/apt/lists/* &&\
     cd ~/detic_ws && catkin init && catkin build
 
 # to avoid conflcit when mounting
