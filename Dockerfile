@@ -107,4 +107,7 @@ RUN touch ~/.bashrc
 RUN echo "source ~/detic_ws/devel/setup.bash" >> ~/.bashrc
 RUN echo 'export PATH="$PATH:$HOME/.local/bin"' >> ~/.bashrc
 
+# We need the patch (https://github.com/jsk-ros-pkg/jsk_common/pull/1805 ). Although it is merged and tagged, we have to wait for the noetic sync. After syncing, we can remove it
+RUN sudo apt install python-is-python3
+
 CMD ["bash"]

@@ -15,6 +15,7 @@
   <arg name="vocabulary" default="lvis"/>
   <arg name="custom_vocabulary" default=""/>
   <arg name="confidence_threshold" default="0.5"/>
+  <arg name="sync_bounding_box_and_label" default="false" doc="Syncing the bounding boxes and their label topics"/>
   <arg name="debug" default="false"/>
 
   <arg name="_input_image" default="/$(arg namespace)/decompressed_image"/>
@@ -33,17 +34,26 @@
       </rosparam>
     </include>
 
+    <!-- Sync RGB and Depth -->
+    <node pkg="jsk_topic_tools" type="synchronize_republish.py" name="synchronize_republish"
+          if="$(arg sync_bounding_box_and_label)">
+      <param name="topics" value="[$(arg _input_image), $(arg _input_depth)]" type="yaml"/>
+      <param name="approximate_sync" value="true" />
+    </node>
+
     <node pkg="nodelet" type="nodelet" name="decompress_points"
           args="$(arg LOAD_STATEMENT) depth_image_proc/point_cloud_xyzrgb $(arg MANAGER)">
       <remap from="rgb/camera_info" to="$(arg input_camera_info)"/>
-      <remap from="rgb/image_rect_color" to="$(arg _input_image)"/>
-      <remap from="depth_registered/image_rect" to="$(arg _input_depth)"/>
+      <remap from="rgb/image_rect_color" to="$(arg _input_image)" unless="$(arg sync_bounding_box_and_label)"/>
+      <remap from="depth_registered/image_rect" to="$(arg _input_depth)" unless="$(arg sync_bounding_box_and_label)"/>
+      <remap from="rgb/image_rect_color" to="synchronize_republish/pub_00" if="$(arg sync_bounding_box_and_label)"/>
+      <remap from="depth_registered/image_rect" to="synchronize_republish/pub_01" if="$(arg sync_bounding_box_and_label)"/>
       <rosparam>
         queue_size: 100
       </rosparam>
     </node>
 
-  <node name="detic_segmentor" pkg="detic_ros" type="node.py" output="screen">
+    <node name="detic_segmentor" pkg="detic_ros" type="node.py" output="screen">
       <remap from="~input_image" to="$(arg _input_image)"/>
       <param name="enable_pubsub" value="true"/>
       <param name="use_jsk_msgs" value="true"/>
@@ -70,14 +80,15 @@
           clear_params="true">
       <remap from="~input" to="depth_registered/points"/>
       <remap from="~input/cluster_indices" to="detic_segmentor/indices"/>
-      <rosparam>
-        multi: true
-        tolerance: 0.03
-        min_size: 10
-        downsample_enable: true
-        approximate_sync: true
-        queue_size: 100
-      </rosparam>
+      <rosparam param="cluster_filter" if="$(arg sync_bounding_box_and_label)">1</rosparam>
+      <rosparam param="multi">true</rosparam>
+      <rosparam param="tolerance">0.03</rosparam>
+      <rosparam param="min_size" unless="$(arg sync_bounding_box_and_label)">10</rosparam>
+      <rosparam param="min_size" if="$(arg sync_bounding_box_and_label)">0</rosparam>
+      <rosparam param="downsample_enable">true</rosparam>
+      <rosparam param="approximate_sync" unless="$(arg sync_bounding_box_and_label)">true</rosparam>
+      <rosparam param="approximate_sync" if="$(arg sync_bounding_box_and_label)">false</rosparam>
+      <rosparam param="queue_size">100</rosparam>
     </node>
 
     <node name="detic_cluster_point_indices_decomposer"
@@ -88,15 +99,14 @@
       <remap from="~target" to="detic_euclidean_clustering/output"/>
       <remap from="~boxes" to="detic_segmentor/output/boxes"/>
       <remap from="~centroid_pose_array" to="detic_segmentor/output/centroid"/>
-      <rosparam subst_value="true">
-        align_boxes: true
-        align_boxes_with_plane: false
-        force_to_flip_z_axis: false
-        use_pca: false
-        target_frame_id: $(arg target_frame_id)
-        approximate_sync: true
-        queue_size: 100
-      </rosparam>
+      <rosparam param="align_boxes">true</rosparam>
+      <rosparam param="align_boxes_with_plane">false</rosparam>
+      <rosparam param="force_to_flip_z_axis">false</rosparam>
+      <rosparam param="use_pca">false</rosparam>
+      <rosparam param="target_frame_id" subst_value="True">$(arg target_frame_id)</rosparam>
+      <rosparam param="approximate_sync" unless="$(arg sync_bounding_box_and_label)">true</rosparam>
+      <rosparam param="approximate_sync" if="$(arg sync_bounding_box_and_label)">false</rosparam>
+      <rosparam param="queue_size">100</rosparam>
     </node>
 
   </group>
