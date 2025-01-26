@@ -1,17 +1,10 @@
-FROM nvidia/cuda:11.2.2-runtime-ubuntu20.04
+FROM nvcr.io/nvidia/l4t-pytorch:r35.1.0-pth1.11-py3
 ENV DEBIAN_FRONTEND=noninteractive
-RUN rm /etc/apt/sources.list.d/cuda.list
 
 RUN echo 'Etc/UTC' > /etc/timezone && \
-    ln -s /usr/share/zoneinfo/Etc/UTC /etc/localtime && \
     apt-get update && \
     apt-get install -q -y --no-install-recommends tzdata && \
     rm -rf /var/lib/apt/lists/*
-
-RUN apt update 
-
-# install minimum tools:
-RUN apt install -y build-essential sudo git
 
 RUN \
   useradd user && \
@@ -26,13 +19,17 @@ RUN echo 'user:user' | chpasswd
 
 # install packages
 RUN apt-get update && apt-get install -q -y --no-install-recommends \
+    build-essential \
+    sudo \
+    git \
     dirmngr \
     gnupg2 \
     curl \
+    lsb-release \
+    wget \
     && rm -rf /var/lib/apt/lists/*
 
 # setup sources.list
-RUN sudo apt-get update && apt-get install -y lsb-release
 RUN sudo sh -c 'echo "deb http://packages.ros.org/ros/ubuntu $(lsb_release -sc) main" > /etc/apt/sources.list.d/ros-latest.list'
 
 # setup keys
@@ -41,33 +38,27 @@ RUN curl -s https://raw.githubusercontent.com/ros/rosdistro/master/ros.asc | sud
 # setup environment
 ENV LANG C.UTF-8
 ENV LC_ALL C.UTF-8
-
 ENV ROS_DISTRO noetic
+
+# Remove OpenCV built with CUDA by NVIDIA. It conflicts with original OpenCV deb
+RUN apt purge opencv-* -y
 
 # install ros packages
 RUN apt-get update && apt-get install -y --no-install-recommends \
     ros-noetic-ros-core=1.5.0-1* \
-    && rm -rf /var/lib/apt/lists/*
-
-# install bootstrap tools
-RUN apt-get update && apt-get install --no-install-recommends -y \
+    ros-noetic-ros-base=1.5.0-1* \
     build-essential \
     python3-rosdep \
     python3-rosinstall \
     python3-vcstools \
+    ros-noetic-jsk-tools \
+    ros-noetic-image-transport-plugins \
+    python3-osrf-pycommon \
+    python3-catkin-tools \
+    python3-wstool \
+    ros-noetic-jsk-pcl-ros \
+    ros-noetic-jsk-pcl-ros-utils \
     && rm -rf /var/lib/apt/lists/*
-
-# install ros packages
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    ros-noetic-ros-base=1.5.0-1* \
-    && rm -rf /var/lib/apt/lists/*
-
-RUN apt update && apt install python3-osrf-pycommon python3-catkin-tools python3-wstool -y
-RUN apt update && apt install ros-noetic-jsk-tools -y
-RUN apt update && apt install ros-noetic-image-transport-plugins -y
-
-# install launch/sample_detection.launch dependencies if you work with point clouds
-RUN apt-get update && apt-get install -y ros-noetic-jsk-pcl-ros ros-noetic-jsk-pcl-ros-utils
 
 WORKDIR /home/user
 
@@ -75,27 +66,36 @@ USER user
 CMD /bin/bash
 SHELL ["/bin/bash", "-c"]
 
-RUN sudo apt install python3-pip -y
-RUN pip3 install torch==1.9.0+cu111 torchvision==0.10.0+cu111 torchaudio==0.9.0 -f https://download.pytorch.org/whl/torch_stable.html
-
 ########################################
 ########### WORKSPACE BUILD ############
 ########################################
 # Installing catkin package
 RUN mkdir -p ~/detic_ws/src
-RUN sudo apt install -y wget
-RUN sudo rosdep init && rosdep update && sudo apt update
+RUN sudo rosdep init && rosdep update
+
+# Build detectron2 from source. The aarch64 version is not released
+RUN cd /tmp &&\
+    git clone -b v0.6 https://github.com/facebookresearch/detectron2 &&\
+    pip3 install --no-cache-dir -e detectron2
+
+RUN mkdir -p ~/detic_ws/src/detic_ros/node_script
+COPY --chown=user requirements.txt /home/user/detic_ws/src/detic_ros
+COPY --chown=user prepare.sh /home/user/detic_ws/src/detic_ros
+RUN cd ~/detic_ws/src/detic_ros && ./prepare.sh &&\
+    rm -rf ~/.cache/pip
+
 COPY --chown=user . /home/user/detic_ws/src/detic_ros
+RUN cd ~/detic_ws/src/detic_ros && git submodule update --init --recursive
 RUN cd ~/detic_ws/src &&\
-    git submodule update --init --recursive &&\
     source /opt/ros/noetic/setup.bash &&\
     wstool init &&\
     wstool merge detic_ros/rosinstall.noetic &&\
     wstool update &&\
+    sudo apt update &&\
     rosdep install --from-paths . --ignore-src -y -r &&\
     source /opt/ros/noetic/setup.bash &&\
     rosdep install --from-paths . -i -r -y &&\
-    cd ~/detic_ws/src/detic_ros && ./prepare.sh &&\
+    sudo rm -rf /var/lib/apt/lists/* &&\
     cd ~/detic_ws && catkin init && catkin build
 
 # to avoid conflcit when mounting
@@ -108,7 +108,6 @@ RUN touch ~/.bashrc
 RUN echo "source ~/detic_ws/devel/setup.bash" >> ~/.bashrc
 RUN echo 'export PATH="$PATH:$HOME/.local/bin"' >> ~/.bashrc
 
-# We need the patch (https://github.com/jsk-ros-pkg/jsk_common/pull/1805 ). Although it is merged and tagged, we have to wait for the noetic sync. After syncing, we can remove it
-RUN sudo apt install python-is-python3
+RUN sudo usermod -aG video user
 
 CMD ["bash"]
