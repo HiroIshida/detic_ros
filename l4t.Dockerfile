@@ -78,7 +78,14 @@ RUN cd /tmp &&\
     git clone -b v0.6 https://github.com/facebookresearch/detectron2 &&\
     pip3 install --no-cache-dir -e detectron2
 
+RUN mkdir -p ~/detic_ws/src/detic_ros/node_script
+COPY --chown=user requirements.txt /home/user/detic_ws/src/detic_ros
+COPY --chown=user prepare.sh /home/user/detic_ws/src/detic_ros
+RUN cd ~/detic_ws/src/detic_ros && ./prepare.sh &&\
+    rm -rf ~/.cache/pip
+
 COPY --chown=user . /home/user/detic_ws/src/detic_ros
+RUN cd ~/detic_ws/src/detic_ros && git submodule update --init --recursive
 RUN cd ~/detic_ws/src &&\
     source /opt/ros/noetic/setup.bash &&\
     wstool init &&\
@@ -88,8 +95,6 @@ RUN cd ~/detic_ws/src &&\
     rosdep install --from-paths . --ignore-src -y -r &&\
     source /opt/ros/noetic/setup.bash &&\
     rosdep install --from-paths . -i -r -y &&\
-    cd ~/detic_ws/src/detic_ros && ./prepare.sh &&\
-    rm -rf ~/.cache/pip &&\
     sudo rm -rf /var/lib/apt/lists/* &&\
     cd ~/detic_ws && catkin init && catkin build
 
@@ -102,5 +107,7 @@ RUN rm -rf ~/detic_ws/src/detic_ros/launch
 RUN touch ~/.bashrc
 RUN echo "source ~/detic_ws/devel/setup.bash" >> ~/.bashrc
 RUN echo 'export PATH="$PATH:$HOME/.local/bin"' >> ~/.bashrc
+
+RUN sudo usermod -aG video user
 
 CMD ["bash"]
