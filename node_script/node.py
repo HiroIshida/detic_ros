@@ -11,6 +11,8 @@ from wrapper import DeticWrapper
 
 from detic_ros.msg import SegmentationInfo
 from detic_ros.srv import DeticSeg, DeticSegRequest, DeticSegResponse
+from detic_ros.srv import CustomVocabulary, CustomVocabularyRequest, CustomVocabularyResponse
+from std_srvs.srv import Empty, EmptyRequest, EmptyResponse
 
 
 class DeticRosNode:
@@ -36,6 +38,8 @@ class DeticRosNode:
 
         self.detic_wrapper = DeticWrapper(node_config)
         self.srv_handler = rospy.Service('~segment_image', DeticSeg, self.callback_srv)
+        self.vocab_srv_handler = rospy.Service('~custom_vocabulary', CustomVocabulary, self.custom_vocab_srv)
+        self.default_vocab_srv_handler = rospy.Service('~default_vocabulary', Empty, self.default_vocab_srv)
 
         if node_config.enable_pubsub:
             # As for large buff_size please see:
@@ -113,6 +117,17 @@ class DeticRosNode:
             resp.debug_image = debug_image
         return resp
 
+    def custom_vocab_srv(self, req: CustomVocabularyRequest) -> CustomVocabularyResponse:
+        rospy.loginfo("Change vocabulary to {}".format(req.vocabulary))
+        self.detic_wrapper.predictor.change_vocabulary(",".join(req.vocabulary))
+        res = CustomVocabularyResponse()
+        return res
+
+    def default_vocab_srv(self, req: EmptyRequest) -> EmptyResponse:
+        rospy.loginfo("Change to default vocabulary")
+        self.detic_wrapper.predictor.set_defalt_vocabulary()
+        res = EmptyResponse()
+        return res
 
 if __name__ == '__main__':
     rospy.init_node('detic_node', anonymous=True)
