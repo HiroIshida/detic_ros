@@ -15,6 +15,7 @@ add_message_files(
 add_service_files(
     FILES
     DeticSeg.srv
+    CustomVocabulary.srv
 )
 
 generate_messages(
