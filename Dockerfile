@@ -1,4 +1,5 @@
 FROM nvidia/cuda:11.2.2-runtime-ubuntu20.04
+ARG KEEP_LAUNCH_FILES=false
 ENV DEBIAN_FRONTEND=noninteractive
 RUN rm /etc/apt/sources.list.d/cuda.list
 
@@ -98,7 +99,10 @@ RUN cd ~/detic_ws/src &&\
     cd ~/detic_ws && catkin init && catkin build
 
 # to avoid conflcit when mounting
-RUN rm -rf ~/detic_ws/src/detic_ros/launch
+RUN if [ "$KEEP_LAUNCH_FILES" = "false" ]; then \
+        rm -rf ~/detic_ws/src/detic_ros/launch; \
+    fi
+
 
 ########################################
 ########### ENV VARIABLE STUFF #########

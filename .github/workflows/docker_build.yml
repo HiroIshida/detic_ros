@@ -28,7 +28,9 @@ jobs:
           with:
               push: false
               tags: detic_ros:latest
-              build_args: INSTALL_JSK_PCL=false
+              build-args: | # for testing purposes only
+                INSTALL_JSK_PCL=false
+                KEEP_LAUNCH_FILES=true
         - name: rostest
           run: |
               docker run --rm detic_ros:latest /bin/bash -i -c "source ~/.bashrc; rostest detic_ros test_node.test"
