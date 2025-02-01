@@ -28,7 +28,7 @@ jobs:
           with:
               push: false
               tags: detic_ros:latest
-              build-args: # for testing purposes only
+              build-args: | # for testing purposes only
                 INSTALL_JSK_PCL=false
                 KEEP_LAUNCH_FILES=true
         - name: rostest
