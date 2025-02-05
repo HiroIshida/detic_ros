@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 3.0.2)
 project(detic_ros)
 
+option(DETIC_ROS_INSTALL_TORCH "Installing the pytorch when building" ON)
+
 find_package(catkin REQUIRED COMPONENTS
     catkin_virtualenv
     std_msgs
@@ -66,9 +68,16 @@ catkin_package(
     CATKIN_DEPENDS message_runtime
 )
 
+if(DETIC_ROS_INSTALL_TORCH)
+    set(REQUIREMENTS requirements_with_torch.txt)
+else()
+    set(REQUIREMENTS requirements_without_torch.txt)
+endif()
+
 catkin_generate_virtualenv(
     PYTHON_INTERPRETER python3
     CHECK_VENV FALSE
+    INPUT_REQUIREMENTS ${REQUIREMENTS}
 )
 
 file(GLOB PYTHON_SCRIPTS node_script/*.py)
