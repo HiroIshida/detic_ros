@@ -85,7 +85,6 @@ RUN sudo apt install -y wget
 RUN sudo rosdep init && rosdep update && sudo apt update
 COPY --chown=user . /home/user/detic_ws/src/detic_ros
 RUN cd ~/detic_ws/src &&\
-    git submodule update --init --recursive &&\
     source /opt/ros/noetic/setup.bash &&\
     wstool init &&\
     wstool merge detic_ros/rosinstall.noetic &&\
