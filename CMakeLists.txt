@@ -67,6 +67,7 @@ catkin_package(
 )
 
 catkin_generate_virtualenv(
+    PYTHON_INTERPRETER python3
     CHECK_VENV FALSE
 )
 
@@ -74,6 +75,10 @@ file(GLOB PYTHON_SCRIPTS node_script/*.py)
 catkin_install_python(
     PROGRAMS ${PYTHON_SCRIPTS}
     DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+)
+
+install(FILES requirements.txt
+    DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
 )
 
 if(CATKIN_ENABLE_TESTING)
