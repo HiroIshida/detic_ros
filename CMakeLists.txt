@@ -15,7 +15,7 @@ endif()
 
 find_package(Git REQUIRED)
 if ((NOT EXISTS ${PROJECT_SOURCE_DIR}/Detic/third_party/CenterNet2)
-    AND (NOT EXISTS ${PROJECT_SOURCE_DIR}/Detic/third_party/Deformable-DETR))
+    OR (NOT EXISTS ${PROJECT_SOURCE_DIR}/Detic/third_party/Deformable-DETR))
     execute_process(
         COMMAND ${GIT_EXECUTABLE} submodule update --init --recursive
         WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
