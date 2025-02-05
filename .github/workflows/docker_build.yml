@@ -15,6 +15,49 @@ jobs:
     name: test docker build
     runs-on: ubuntu-latest
     steps:
+        - name: Free disk space
+          run: |
+            sudo rm -rf "/opt/ghc" || true
+            sudo rm -rf "/usr/share/dotnet" || true
+            sudo rm -rf "$AGENT_TOOLSDIRECTORY" || true
+            sudo rm -rf "/usr/local/lib/android" || true
+            sudo rm -rf "/usr/local/share/boost" || true
+            sudo apt purge -y \
+              ansible* \
+              aria2* \
+              aspnetcore* \
+              azure-cli* \
+              cabal* \
+              clang* \
+              dotnet-* \
+              firefox* \
+              gfortran-* \
+              ghc* \
+              google-chrome-stable* \
+              google-cloud-sdk* \
+              imagemagick* \
+              javascript* \
+              kubectl* \
+              llvm* \
+              mono* \
+              mysql* \
+              nginx* \
+              node* \
+              npm* \
+              nuget* \
+              php* \
+              postgresql* \
+              powershell* \
+              rpm* \
+              ruby* \
+              sqlite3* \
+              subversion \
+              temurin* \
+              tmux* \
+              vim* \
+              yarn*
+            sudo apt-get autoremove -y >/dev/null 2>&1 || true
+            sudo apt-get autoclean -y >/dev/null 2>&1 || true
         - name: Checkout 
           uses: actions/checkout@v2
         - name: Setup QEMU
