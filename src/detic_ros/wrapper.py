@@ -11,7 +11,7 @@ from cv_bridge import CvBridge
 from detectron2.utils.visualizer import VisImage
 from detic.predictor import VisualizationDemo
 from jsk_recognition_msgs.msg import Label, LabelArray, VectorArray
-from node_config import NodeConfig
+from detic_ros.node_config import NodeConfig
 from sensor_msgs.msg import Image
 from std_msgs.msg import Header
 
