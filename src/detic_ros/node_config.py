@@ -7,8 +7,11 @@ import rospkg
 import rospy
 import torch
 
-# Dirty but no way, because CenterNet2 is not package oriented
-sys.path.insert(0, os.path.join(sys.path[0], 'third_party/CenterNet2/'))
+# Dirty but no way, because CenterNet2, Detic is not package oriented
+rospack = rospkg.RosPack()
+pack_path = rospack.get_path("detic_ros")
+sys.path.insert(0, os.path.join(pack_path, 'node_script/third_party/CenterNet2'))
+sys.path.insert(0, os.path.join(pack_path, 'Detic'))
 
 from centernet.config import add_centernet_config
 from detectron2.config import get_cfg
@@ -59,8 +62,6 @@ class NodeConfig:
 
         assert device_name in ['cpu', 'cuda']
         assert model_type in NodeConfig.model_names
-
-        pack_path = rospkg.RosPack().get_path('detic_ros')
 
         model_name = NodeConfig.model_names[model_type]
         default_detic_config_path = os.path.join(
@@ -119,7 +120,6 @@ class NodeConfig:
         cfg.MODEL.ROI_HEADS.ONE_CLASS_PER_PROPOSAL = True
 
         # Maybe should edit detic_configs/Base-C2_L_R5021k_640b64_4x.yaml
-        pack_path = rospkg.RosPack().get_path('detic_ros')
         cfg.MODEL.ROI_BOX_HEAD.CAT_FREQ_PATH = os.path.join(
             pack_path, 'datasets/metadata/lvis_v1_train_cat_info.json')
 

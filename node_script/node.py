@@ -2,23 +2,18 @@
 from typing import Optional
 
 import rospy
-import torch
+from detic_ros.msg import SegmentationInfo
+from detic_ros.node_config import NodeConfig
+from detic_ros.srv import (CustomVocabulary, CustomVocabularyRequest,
+                           CustomVocabularyResponse, DeticSeg, DeticSegRequest,
+                           DeticSegResponse)
+from detic_ros.wrapper import DeticWrapper
 from jsk_recognition_msgs.msg import LabelArray, VectorArray
-from node_config import NodeConfig
 from rospy import Publisher, Subscriber
 from sensor_msgs.msg import Image
 from std_srvs.srv import Empty, EmptyRequest, EmptyResponse
-from wrapper import DeticWrapper
 
-from detic_ros.msg import SegmentationInfo
-from detic_ros.srv import (
-    CustomVocabulary,
-    CustomVocabularyRequest,
-    CustomVocabularyResponse,
-    DeticSeg,
-    DeticSegRequest,
-    DeticSegResponse,
-)
+import torch
 
 
 class DeticRosNode:

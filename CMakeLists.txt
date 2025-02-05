@@ -1,10 +1,48 @@
 cmake_minimum_required(VERSION 3.0.2)
 project(detic_ros)
 
-find_package(catkin REQUIRED
+find_package(catkin REQUIRED COMPONENTS
+    catkin_virtualenv
     std_msgs
     sensor_msgs
     message_generation
+)
+
+find_program(NVIDIA_SMI nvidia-smi)
+if(NOT NVIDIA_SMI)
+    message(WARNING "NVIDIA Driver not found. It is strongly recommended that the NVIDIA GPU is available")
+endif()
+
+find_package(Git REQUIRED)
+if ((NOT EXISTS ${PROJECT_SOURCE_DIR}/Detic/third_party/CenterNet2)
+    OR (NOT EXISTS ${PROJECT_SOURCE_DIR}/Detic/third_party/Deformable-DETR))
+    execute_process(
+        COMMAND ${GIT_EXECUTABLE} submodule update --init --recursive
+        WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
+    )
+endif()
+
+catkin_python_setup()
+
+find_package(Wget REQUIRED)
+add_custom_target(create_models_dir
+    COMMAND ${CMAKE_COMMAND} -E make_directory "${PROJECT_SOURCE_DIR}/models"
+)
+add_custom_target(download_LCOCOI21k_CLIP_SwinB_896b32_4x_ft4x ALL
+    DEPENDS create_models_dir
+    COMMAND ${WGET_EXECUTABLE} "https://dl.fbaipublicfiles.com/detic/Detic_LCOCOI21k_CLIP_SwinB_896b32_4x_ft4x_max-size.pth" -O "${PROJECT_SOURCE_DIR}/models/Detic_LCOCOI21k_CLIP_SwinB_896b32_4x_ft4x_max-size.pth"
+)
+add_custom_target(download_LCOCOI21k_CLIP_CXT21k_640b32_4x_ft4x ALL
+    DEPENDS create_models_dir
+    COMMAND ${WGET_EXECUTABLE} "https://dl.fbaipublicfiles.com/detic/Detic_LCOCOI21k_CLIP_CXT21k_640b32_4x_ft4x_max-size.pth" -O "${PROJECT_SOURCE_DIR}/models/Detic_LCOCOI21k_CLIP_CXT21k_640b32_4x_ft4x_max-size.pth"
+)
+add_custom_target(download_LCOCOI21k_CLIP_R5021k_640b32_4x_ft4x ALL
+    DEPENDS create_models_dir
+    COMMAND ${WGET_EXECUTABLE} "https://dl.fbaipublicfiles.com/detic/Detic_LCOCOI21k_CLIP_R5021k_640b32_4x_ft4x_max-size.pth" -O "${PROJECT_SOURCE_DIR}/models/Detic_LCOCOI21k_CLIP_R5021k_640b32_4x_ft4x_max-size.pth"
+)
+add_custom_target(download_LCOCOI21k_CLIP_R18_640b32_4x_ft4x ALL
+    DEPENDS create_models_dir
+    COMMAND ${WGET_EXECUTABLE} "https://dl.fbaipublicfiles.com/detic/Detic_LCOCOI21k_CLIP_R18_640b32_4x_ft4x_max-size.pth" -O "${PROJECT_SOURCE_DIR}/models/Detic_LCOCOI21k_CLIP_R18_640b32_4x_ft4x_max-size.pth"
 )
 
 add_message_files(
@@ -22,6 +60,25 @@ generate_messages(
     DEPENDENCIES
     std_msgs
     sensor_msgs
+)
+  
+catkin_package(
+    CATKIN_DEPENDS message_runtime
+)
+
+catkin_generate_virtualenv(
+    PYTHON_INTERPRETER python3
+    CHECK_VENV FALSE
+)
+
+file(GLOB PYTHON_SCRIPTS node_script/*.py)
+catkin_install_python(
+    PROGRAMS ${PYTHON_SCRIPTS}
+    DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+)
+
+install(FILES requirements.txt
+    DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
 )
 
 if(CATKIN_ENABLE_TESTING)

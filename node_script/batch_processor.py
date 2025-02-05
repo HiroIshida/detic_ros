@@ -8,9 +8,10 @@ import numpy as np
 import rosbag
 import tqdm
 from cv_bridge import CvBridge
+from sensor_msgs.msg import Image
+
 from moviepy.editor import ImageSequenceClip
 from node_config import NodeConfig
-from sensor_msgs.msg import Image
 from wrapper import DeticWrapper, InferenceRawResult
 
 
