@@ -4,9 +4,8 @@ import unittest
 
 import rospy
 import rostest
-from sensor_msgs.msg import Image
-
 from detic_ros.msg import SegmentationInfo
+from sensor_msgs.msg import Image
 
 
 class TestNode(unittest.TestCase):

@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 import argparse
 
-import cv2
 import matplotlib.pyplot as plt
 import rospy
 from cv_bridge import CvBridge
-
 from detic_ros.srv import DeticSeg
+
+import cv2
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
