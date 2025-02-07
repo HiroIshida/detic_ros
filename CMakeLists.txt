@@ -30,19 +30,19 @@ add_custom_target(create_models_dir
 )
 add_custom_target(download_LCOCOI21k_CLIP_SwinB_896b32_4x_ft4x ALL
     DEPENDS create_models_dir
-    COMMAND ${WGET_EXECUTABLE} "https://dl.fbaipublicfiles.com/detic/Detic_LCOCOI21k_CLIP_SwinB_896b32_4x_ft4x_max-size.pth" -O "${PROJECT_SOURCE_DIR}/models/Detic_LCOCOI21k_CLIP_SwinB_896b32_4x_ft4x_max-size.pth"
+    COMMAND ${WGET_EXECUTABLE} -q "https://dl.fbaipublicfiles.com/detic/Detic_LCOCOI21k_CLIP_SwinB_896b32_4x_ft4x_max-size.pth" -O "${PROJECT_SOURCE_DIR}/models/Detic_LCOCOI21k_CLIP_SwinB_896b32_4x_ft4x_max-size.pth"
 )
 add_custom_target(download_LCOCOI21k_CLIP_CXT21k_640b32_4x_ft4x ALL
     DEPENDS create_models_dir
-    COMMAND ${WGET_EXECUTABLE} "https://dl.fbaipublicfiles.com/detic/Detic_LCOCOI21k_CLIP_CXT21k_640b32_4x_ft4x_max-size.pth" -O "${PROJECT_SOURCE_DIR}/models/Detic_LCOCOI21k_CLIP_CXT21k_640b32_4x_ft4x_max-size.pth"
+    COMMAND ${WGET_EXECUTABLE} -q "https://dl.fbaipublicfiles.com/detic/Detic_LCOCOI21k_CLIP_CXT21k_640b32_4x_ft4x_max-size.pth" -O "${PROJECT_SOURCE_DIR}/models/Detic_LCOCOI21k_CLIP_CXT21k_640b32_4x_ft4x_max-size.pth"
 )
 add_custom_target(download_LCOCOI21k_CLIP_R5021k_640b32_4x_ft4x ALL
     DEPENDS create_models_dir
-    COMMAND ${WGET_EXECUTABLE} "https://dl.fbaipublicfiles.com/detic/Detic_LCOCOI21k_CLIP_R5021k_640b32_4x_ft4x_max-size.pth" -O "${PROJECT_SOURCE_DIR}/models/Detic_LCOCOI21k_CLIP_R5021k_640b32_4x_ft4x_max-size.pth"
+    COMMAND ${WGET_EXECUTABLE} -q "https://dl.fbaipublicfiles.com/detic/Detic_LCOCOI21k_CLIP_R5021k_640b32_4x_ft4x_max-size.pth" -O "${PROJECT_SOURCE_DIR}/models/Detic_LCOCOI21k_CLIP_R5021k_640b32_4x_ft4x_max-size.pth"
 )
 add_custom_target(download_LCOCOI21k_CLIP_R18_640b32_4x_ft4x ALL
     DEPENDS create_models_dir
-    COMMAND ${WGET_EXECUTABLE} "https://dl.fbaipublicfiles.com/detic/Detic_LCOCOI21k_CLIP_R18_640b32_4x_ft4x_max-size.pth" -O "${PROJECT_SOURCE_DIR}/models/Detic_LCOCOI21k_CLIP_R18_640b32_4x_ft4x_max-size.pth"
+    COMMAND ${WGET_EXECUTABLE} -q "https://dl.fbaipublicfiles.com/detic/Detic_LCOCOI21k_CLIP_R18_640b32_4x_ft4x_max-size.pth" -O "${PROJECT_SOURCE_DIR}/models/Detic_LCOCOI21k_CLIP_R18_640b32_4x_ft4x_max-size.pth"
 )
 
 add_message_files(
