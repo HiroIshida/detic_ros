@@ -11,8 +11,8 @@ from cv_bridge import CvBridge
 from sensor_msgs.msg import Image
 
 from moviepy.editor import ImageSequenceClip
-from node_config import NodeConfig
-from wrapper import DeticWrapper, InferenceRawResult
+from detic_ros.node_config import NodeConfig
+from detic_ros.wrapper import DeticWrapper, InferenceRawResult
 
 
 def bag_to_images(file_path: str, topic_name_extract: Optional[str] = None):
