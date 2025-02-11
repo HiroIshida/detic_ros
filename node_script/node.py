@@ -120,13 +120,15 @@ class DeticRosNode:
 
     def custom_vocab_srv(self, req: CustomVocabularyRequest) -> CustomVocabularyResponse:
         rospy.loginfo("Change vocabulary to {}".format(req.vocabulary))
-        self.detic_wrapper.predictor.change_vocabulary(",".join(req.vocabulary))
+        with self.detic_wrapper.predictor_lock:
+            self.detic_wrapper.predictor.change_vocabulary(",".join(req.vocabulary))
         res = CustomVocabularyResponse()
         return res
 
     def default_vocab_srv(self, req: EmptyRequest) -> EmptyResponse:
         rospy.loginfo("Change to default vocabulary")
-        self.detic_wrapper.predictor.set_defalt_vocabulary()
+        with self.detic_wrapper.predictor_lock:
+            self.detic_wrapper.predictor.set_defalt_vocabulary()
         res = EmptyResponse()
         return res
 
