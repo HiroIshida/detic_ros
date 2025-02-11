@@ -1,5 +1,6 @@
 import os
 from dataclasses import dataclass
+from threading import Lock
 from typing import List, Optional
 
 import detic
@@ -88,6 +89,7 @@ class DeticWrapper:
         dummy_args = self.DummyArgs(node_config.vocabulary, node_config.custom_vocabulary)
 
         self.predictor = VisualizationDemo(detectron_cfg, dummy_args)
+        self.predictor_lock = Lock()
         self.node_config = node_config
         self.class_names = self.predictor.metadata.get("thing_classes", None)
 
@@ -107,11 +109,12 @@ class DeticWrapper:
         if self.node_config.verbose:
             time_start = rospy.Time.now()
 
-        if self.node_config.out_debug_img:
-            predictions, visualized_output = self.predictor.run_on_image(img)
-        else:
-            predictions = self.predictor.predictor(img)
-            visualized_output = None
+        with self.predictor_lock:
+            if self.node_config.out_debug_img:
+                predictions, visualized_output = self.predictor.run_on_image(img)
+            else:
+                predictions = self.predictor.predictor(img)
+                visualized_output = None
         instances = predictions['instances'].to(torch.device("cpu"))
 
         if self.node_config.verbose:
@@ -152,3 +155,11 @@ class DeticWrapper:
             msg.header,
             detected_classes_names)
         return result
+
+    def change_vocabulary(self, vocabulary: List[str]):
+        with self.predictor_lock:
+            self.predictor.change_vocabulary(",".join(vocabulary))
+
+    def set_default_vocabulary(self):
+        with self.predictor_lock:
+            self.predictor.set_defalt_vocabulary()  # TODO: fix typo => default
