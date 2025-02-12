@@ -17,6 +17,7 @@ import torch
 
 
 class DeticRosNode:
+    is_active: bool
     detic_wrapper: DeticWrapper
     sub: Subscriber
     # some debug image publisher
@@ -37,9 +38,12 @@ class DeticRosNode:
 
         rospy.loginfo("node_config: {}".format(node_config))
 
+        self.is_active = True
         self.detic_wrapper = DeticWrapper(node_config)
         self.srv_handler = rospy.Service('~segment_image', DeticSeg, self.callback_srv)
         self.vocab_srv_handler = rospy.Service('~custom_vocabulary', CustomVocabulary, self.custom_vocab_srv)
+        self.inactivate_srv_handler = rospy.Service('~inactivate', Empty, self.inactivate_srv)
+        self.activate_srv_handler = rospy.Service('~activate', Empty, self.activate_srv)
         self.default_vocab_srv_handler = rospy.Service('~default_vocabulary', Empty, self.default_vocab_srv)
 
         if node_config.enable_pubsub:
@@ -70,7 +74,10 @@ class DeticRosNode:
         rospy.loginfo('initialized node')
 
     def callback_image(self, msg: Image):
-        # Inference
+        if not self.is_active:
+            rospy.sleep(0.1)  # to avoid potential busy loop
+            return
+
         raw_result = self.detic_wrapper.infer(msg)
 
         # Publish main topics
@@ -104,6 +111,16 @@ class DeticRosNode:
         if self.detic_wrapper.node_config.verbose:
             time_elapsed_total = (rospy.Time.now() - msg.header.stamp).to_sec()
             rospy.loginfo('total elapsed time in callback {}'.format(time_elapsed_total))
+
+    def inactivate_srv(self, req: EmptyRequest) -> EmptyResponse:
+        rospy.loginfo("Inactivate subscriber callback")
+        self.is_active = False
+        return EmptyResponse()
+
+    def activate_srv(self, req: EmptyRequest) -> EmptyResponse:
+        rospy.loginfo("Activate subscriber callback")
+        self.is_active = True
+        return EmptyResponse()
 
     def callback_srv(self, req: DeticSegRequest) -> DeticSegResponse:
         msg = req.image
