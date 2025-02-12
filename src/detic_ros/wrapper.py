@@ -11,6 +11,7 @@ import torch
 from cv_bridge import CvBridge
 from detectron2.utils.visualizer import VisImage
 from detectron2.engine.defaults import DefaultPredictor
+from detectron2.export import TracingAdapter
 from detic.predictor import VisualizationDemo
 from jsk_recognition_msgs.msg import Label, LabelArray, VectorArray
 from detic_ros.node_config import NodeConfig
@@ -118,11 +119,19 @@ class DeticWrapper:
                 height, width = dummy.shape[:2]
                 dummy_ten = inner_predictor.aug.get_transform(dummy).apply_image(dummy)
                 dummy_ten = torch.as_tensor(dummy_ten.astype("float32").transpose(2, 0, 1))
-                dummy_ten.to(inner_predictor.cfg.MODEL.DEVICE)
+                dummy_ten = dummy_ten.to(inner_predictor.cfg.MODEL.DEVICE)
                 assert isinstance(inner_predictor.model, Module)
-                dummy_inp = {"image": dummy_ten, "height": height, "width": width}
-                inner_predictor.model([dummy_inp])
-                # torch.jit.trace(inner_predictor.model, ([dummy_inp],), strict=False)
+                dummy_inp = {"image": dummy_ten}
+                adapter = TracingAdapter(inner_predictor.model, [dummy_inp])
+                rospy.loginfo("tracing...")
+                traced = torch.jit.trace(adapter, adapter.flattened_inputs)
+                rospy.loginfo("optimizing...")
+                traced_optimized = torch.jit.optimize_for_inference(traced)
+                rospy.loginfo("warming up...")
+                traced_optimized(dummy_ten)
+                out = traced_optimized(dummy_ten)
+                print(out)
+                rospy.loginfo("jit compiled!")
             self.jit_compiled = True
 
         if self.node_config.verbose:
