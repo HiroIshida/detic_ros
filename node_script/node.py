@@ -74,6 +74,7 @@ class DeticRosNode:
         rospy.loginfo('initialized node')
 
     def callback_image(self, msg: Image):
+        time_start = rospy.Time.now()
         if not self.is_active:
             rospy.sleep(0.1)  # to avoid potential busy loop
             return
@@ -109,7 +110,7 @@ class DeticRosNode:
 
         # Print debug info
         if self.detic_wrapper.node_config.verbose:
-            time_elapsed_total = (rospy.Time.now() - msg.header.stamp).to_sec()
+            time_elapsed_total = (rospy.Time.now() - time_start).to_sec()
             rospy.loginfo('total elapsed time in callback {}'.format(time_elapsed_total))
 
     def inactivate_srv(self, req: EmptyRequest) -> EmptyResponse:
