@@ -93,6 +93,7 @@ class DeticWrapper:
 
         self.predictor = VisualizationDemo(detectron_cfg, dummy_args)
         self.predictor_lock = Lock()
+        self.jit_compilation_lock = Lock()
         self.node_config = node_config
         self.class_names = self.predictor.metadata.get("thing_classes", None)
         self.jit_compiled = False
@@ -110,29 +111,34 @@ class DeticWrapper:
         # Segmentation image, detected classes, detection scores, visualization image
         img = _cv_bridge.imgmsg_to_cv2(msg, desired_encoding='bgr8')
 
-        if not self.jit_compiled:
-            inner_predictor = self.predictor.predictor
-            assert isinstance(inner_predictor, DefaultPredictor)
-            assert inner_predictor.input_format == "RGB"
-            with torch.no_grad():
-                dummy = img[:, :, ::-1]
-                height, width = dummy.shape[:2]
-                dummy_ten = inner_predictor.aug.get_transform(dummy).apply_image(dummy)
-                dummy_ten = torch.as_tensor(dummy_ten.astype("float32").transpose(2, 0, 1))
-                dummy_ten = dummy_ten.to(inner_predictor.cfg.MODEL.DEVICE)
-                assert isinstance(inner_predictor.model, Module)
-                dummy_inp = {"image": dummy_ten}
-                adapter = TracingAdapter(inner_predictor.model, [dummy_inp])
-                rospy.loginfo("tracing...")
-                traced = torch.jit.trace(adapter, adapter.flattened_inputs)
-                rospy.loginfo("optimizing...")
-                traced_optimized = torch.jit.optimize_for_inference(traced)
-                rospy.loginfo("warming up...")
-                traced_optimized(dummy_ten)
-                out = traced_optimized(dummy_ten)
-                print(out)
-                rospy.loginfo("jit compiled!")
-            self.jit_compiled = True
+        with self.jit_compilation_lock:
+            # NOTE: although we have only one Subscriber callback, only at the initial run
+            # it seems that two different threads are calling this method. Thus, we need to
+            # lock this.
+            if not self.jit_compiled:
+                inner_predictor = self.predictor.predictor
+                assert isinstance(inner_predictor, DefaultPredictor)
+                assert inner_predictor.input_format == "RGB"
+                with torch.no_grad():
+                    dummy = img[:, :, ::-1]
+                    height, width = dummy.shape[:2]
+                    dummy_ten = inner_predictor.aug.get_transform(dummy).apply_image(dummy)
+                    dummy_ten = torch.as_tensor(dummy_ten.astype("float32").transpose(2, 0, 1))
+                    dummy_ten = dummy_ten.to(inner_predictor.cfg.MODEL.DEVICE)
+                    assert isinstance(inner_predictor.model, Module)
+                    dummy_inp = {"image": dummy_ten}
+                    adapter = TracingAdapter(inner_predictor.model, [dummy_inp])
+                    rospy.loginfo("tracing...")
+                    traced = torch.jit.trace(adapter, adapter.flattened_inputs)
+                    # NOTE: optimize_for_inference causes error in the second trace.
+                    # maybe updating torch version will fix this, but it's not easy
+                    # due to detectron2's wheel release is only for up to 1.9
+                    rospy.loginfo("warming up...")
+                    traced(dummy_ten)
+                    out = traced(dummy_ten)
+                    rospy.loginfo("jit compiled!")
+                # replace the predictor with the traced one
+                self.jit_compiled = True
 
         if self.node_config.verbose:
             time_start = rospy.Time.now()
