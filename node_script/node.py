@@ -9,6 +9,7 @@ from detic_ros.srv import (CustomVocabulary, CustomVocabularyRequest,
                            DeticSegResponse)
 from detic_ros.wrapper import DeticWrapper
 from jsk_recognition_msgs.msg import LabelArray, VectorArray
+from jsk_topic_tools.transport import ConnectionBasedTransport
 from rospy import Publisher, Subscriber
 from sensor_msgs.msg import Image
 from std_srvs.srv import Empty, EmptyRequest, EmptyResponse
@@ -16,7 +17,7 @@ from std_srvs.srv import Empty, EmptyRequest, EmptyResponse
 import torch
 
 
-class DeticRosNode:
+class DeticRosNode(ConnectionBasedTransport):
     is_active: bool
     detic_wrapper: DeticWrapper
     sub: Subscriber
@@ -29,49 +30,58 @@ class DeticRosNode:
     pub_labels: Optional[Publisher]
     pub_score: Optional[Publisher]
 
+    _node_config: NodeConfig
+
     # otherwise, the following publisher will be used
     pub_info: Optional[Publisher]
 
     def __init__(self, node_config: Optional[NodeConfig] = None):
-        if node_config is None:
-            node_config = NodeConfig.from_rosparam()
+        super(DeticRosNode, self).__init__()
 
-        rospy.loginfo("node_config: {}".format(node_config))
+        if node_config is None:
+            self._node_config = NodeConfig.from_rosparam()
+
+        rospy.loginfo("node_config: {}".format(self._node_config))
 
         self.is_active = True
-        self.detic_wrapper = DeticWrapper(node_config)
+        self.detic_wrapper = DeticWrapper(self._node_config)
         self.srv_handler = rospy.Service('~segment_image', DeticSeg, self.callback_srv)
         self.vocab_srv_handler = rospy.Service('~custom_vocabulary', CustomVocabulary, self.custom_vocab_srv)
         self.inactivate_srv_handler = rospy.Service('~inactivate', Empty, self.inactivate_srv)
         self.activate_srv_handler = rospy.Service('~activate', Empty, self.activate_srv)
         self.default_vocab_srv_handler = rospy.Service('~default_vocabulary', Empty, self.default_vocab_srv)
 
-        if node_config.enable_pubsub:
+        if self._node_config.num_torch_thread is not None:
+            torch.set_num_threads(self._node_config.num_torch_thread)
+
+        if not self._node_config.enable_pubsub: return
+        if self._node_config.use_jsk_msgs:
+            self.pub_segimg = self.advertise('~segmentation', Image, queue_size=1)
+            self.pub_labels = self.advertise('~detected_classes', LabelArray, queue_size=1)
+            self.pub_score = self.advertise('~score', VectorArray, queue_size=1)
+        else:
+            self.pub_info = self.advertise('~segmentation_info', SegmentationInfo,
+                                           queue_size=1)
+
+        if self._node_config.out_debug_img:
+            self.pub_debug_image = self.advertise('~debug_image', Image, queue_size=1)
+        else:
+            self.pub_debug_image = None
+        if self._node_config.out_debug_segimg:
+            self.pub_debug_segmentation_image = self.advertise('~debug_segmentation_image',
+                                                                    Image, queue_size=10)
+        else:
+            self.pub_debug_segmentation_image = None
+
+    def subscribe(self):
+        if self._node_config.enable_pubsub:
             # As for large buff_size please see:
             # https://answers.ros.org/question/220502/image-subscriber-lag-despite-queue-1/?answer=220505?answer=220505#post-id-22050://answers.ros.org/question/220502/image-subscriber-lag-despite-queue-1/?answer=220505?answer=220505#post-id-220505
             self.sub = rospy.Subscriber('~input_image', Image, self.callback_image, queue_size=1, buff_size=2**24)
-            if node_config.use_jsk_msgs:
-                self.pub_segimg = rospy.Publisher('~segmentation', Image, queue_size=1)
-                self.pub_labels = rospy.Publisher('~detected_classes', LabelArray, queue_size=1)
-                self.pub_score = rospy.Publisher('~score', VectorArray, queue_size=1)
-            else:
-                self.pub_info = rospy.Publisher('~segmentation_info', SegmentationInfo,
-                                                queue_size=1)
 
-            if node_config.out_debug_img:
-                self.pub_debug_image = rospy.Publisher('~debug_image', Image, queue_size=1)
-            else:
-                self.pub_debug_image = None
-            if node_config.out_debug_segimg:
-                self.pub_debug_segmentation_image = rospy.Publisher('~debug_segmentation_image',
-                                                                    Image, queue_size=10)
-            else:
-                self.pub_debug_segmentation_image = None
 
-        if node_config.num_torch_thread is not None:
-            torch.set_num_threads(node_config.num_torch_thread)
-
-        rospy.loginfo('initialized node')
+    def unsubscribe(self):
+        self.sub.unregister()
 
     def callback_image(self, msg: Image):
         time_start = rospy.Time.now()
