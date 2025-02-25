@@ -9,6 +9,7 @@ from detic_ros.srv import (CustomVocabulary, CustomVocabularyRequest,
                            DeticSegResponse)
 from detic_ros.wrapper import DeticWrapper
 from jsk_recognition_msgs.msg import LabelArray, VectorArray
+from jsk_topic_tools.transport import ConnectionBasedTransport
 from rospy import Publisher, Subscriber
 from sensor_msgs.msg import Image
 from std_srvs.srv import Empty, EmptyRequest, EmptyResponse
@@ -16,7 +17,7 @@ from std_srvs.srv import Empty, EmptyRequest, EmptyResponse
 import torch
 
 
-class DeticRosNode:
+class DeticRosNode(ConnectionBasedTransport):
     is_active: bool
     detic_wrapper: DeticWrapper
     sub: Subscriber
@@ -33,6 +34,8 @@ class DeticRosNode:
     pub_info: Optional[Publisher]
 
     def __init__(self, node_config: Optional[NodeConfig] = None):
+        super(DeticRosNode, self).__init__()
+
         if node_config is None:
             node_config = NodeConfig.from_rosparam()
 
@@ -51,11 +54,11 @@ class DeticRosNode:
             # https://answers.ros.org/question/220502/image-subscriber-lag-despite-queue-1/?answer=220505?answer=220505#post-id-22050://answers.ros.org/question/220502/image-subscriber-lag-despite-queue-1/?answer=220505?answer=220505#post-id-220505
             self.sub = rospy.Subscriber('~input_image', Image, self.callback_image, queue_size=1, buff_size=2**24)
             if node_config.use_jsk_msgs:
-                self.pub_segimg = rospy.Publisher('~segmentation', Image, queue_size=1)
-                self.pub_labels = rospy.Publisher('~detected_classes', LabelArray, queue_size=1)
-                self.pub_score = rospy.Publisher('~score', VectorArray, queue_size=1)
+                self.pub_segimg = self.advertise('~segmentation', Image, queue_size=1)
+                self.pub_labels = self.advertise('~detected_classes', LabelArray, queue_size=1)
+                self.pub_score = self.advertise('~score', VectorArray, queue_size=1)
             else:
-                self.pub_info = rospy.Publisher('~segmentation_info', SegmentationInfo,
+                self.pub_info = self.advertise('~segmentation_info', SegmentationInfo,
                                                 queue_size=1)
 
             if node_config.out_debug_img:
