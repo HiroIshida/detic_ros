@@ -1,6 +1,4 @@
 #/bin/bash
-dest_picture=$(rospack find detic_ros)/test/data
-wget -nc https://web.eecs.umich.edu/~fouhey/fun/desk/desk.jpg -P $dest_picture
 
 dest_rosbag=$(rospack find detic_ros)/test/data/desk.bag
 if [ ! -f "$dest_rosbag" ]; then
