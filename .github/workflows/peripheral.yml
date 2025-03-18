@@ -19,5 +19,5 @@ jobs:
               pip3 install flake8 isort
         - name: check by isort and flake8
           run: |
-              python3 -m isort example/ test/ node_script/
+              python3 -m isort --check-only example/ test/ node_script/
               python3 -m flake8 example/ test/ node_script/
