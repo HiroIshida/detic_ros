@@ -59,7 +59,9 @@ class DeticRosNode(ConnectionBasedTransport):
         if self._node_config.num_torch_thread is not None:
             torch.set_num_threads(self._node_config.num_torch_thread)
 
-        if not self._node_config.enable_pubsub: return
+        if not self._node_config.enable_pubsub:
+            return
+
         if self._node_config.use_jsk_msgs:
             self.pub_segimg = self.advertise('~segmentation', Image, queue_size=1)
             self.pub_labels = self.advertise('~detected_classes', LabelArray, queue_size=1)
@@ -74,7 +76,7 @@ class DeticRosNode(ConnectionBasedTransport):
             self.pub_debug_image = None
         if self._node_config.out_debug_segimg:
             self.pub_debug_segmentation_image = self.advertise('~debug_segmentation_image',
-                                                                    Image, queue_size=10)
+                                                               Image, queue_size=10)
         else:
             self.pub_debug_segmentation_image = None
 
@@ -83,7 +85,6 @@ class DeticRosNode(ConnectionBasedTransport):
             # As for large buff_size please see:
             # https://answers.ros.org/question/220502/image-subscriber-lag-despite-queue-1/?answer=220505?answer=220505#post-id-22050://answers.ros.org/question/220502/image-subscriber-lag-despite-queue-1/?answer=220505?answer=220505#post-id-220505
             self.sub = rospy.Subscriber('~input_image', Image, self.callback_image, queue_size=1, buff_size=2**24)
-
 
     def unsubscribe(self):
         self.sub.unregister()
