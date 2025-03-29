@@ -12,10 +12,18 @@ example of three dimensional pose recognition for cups, bottles, and bottle caps
 
 <img src='https://user-images.githubusercontent.com/20625381/199499891-c5b66103-0de1-4619-ad64-0d1571efba92.png' width=50%>
 
-## step1: build docker container
-*Ofcourse you can build this pacakge on your workspace and launch as normal ros package. But for those using CUDA, the following docker based approach might be safer and easy.*
+## step1: setup
 
+### option1: build as normal catkin package
+``` shell
+cd <your catkin workspace>/src
+git clone git@github.com:HiroIshida/detic_ros.git
+rosdep update && rosdep install -iry .
+cd ../
+catkin build
+```
 
+### option2: use docker
 Prerequsite: You need to preinstall nvidia-container-toolkit beforehand. see (https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/install-guide.html)
 
 Build docker image
@@ -25,8 +33,20 @@ cd detic_ros
 docker build -t detic_ros .
 ```
 ## step2: launch Detic-segmentor node
+
 Example for running node on pr1040 (**please replace `pr1040` by you robot hostname or `localhost`**):
+
+```shell
+roslaunch detic_ros sample.launch \
+    out_debug_img:=true \
+    out_debug_segimg:=false \
+    compressed:=false \
+    device:=auto \
+    input_image:=/kinect_head/rgb/image_color
+```
+
 ```bash
+# When you use docker,
 python3 run_container.py -host pr1040 -mount ./launch -name sample.launch \
     out_debug_img:=true \
     out_debug_segimg:=false \
@@ -34,6 +54,7 @@ python3 run_container.py -host pr1040 -mount ./launch -name sample.launch \
     device:=auto \
     input_image:=/kinect_head/rgb/image_color
 ```
+
 The minimum necessary argument of `run_container.py` is `host`, `mount` and `name`:
 - host: host name or IP address
 - mount: launch file or launch file's directory path that will be mounted inside the container. In this example, launch file directory of this repository is mounted.
@@ -41,17 +62,27 @@ The minimum necessary argument of `run_container.py` is `host`, `mount` and `nam
 Also, you can specify launch args as the roslaunch command (e.g. `out_debug_img:=true`). This launch args must come after the above three args.
 
 Another example for running three dimensional object pose detection using point cloud filtered by segmentation.
+
+```shell
+roslaunch detic_ros sample_detection.launch \
+    debug:=true \
+    vocabulary:=custom \
+    custom_vocabulary:=bottle,cup
+```
+
 ```bash
+# When you use docker,
 python3 run_container.py -host pr1040 -mount ./launch -name sample_detection.launch \
     debug:=true \
     vocabulary:=custom \
     custom_vocabulary:=bottle,cup
 ```
+
 Or `rosrun detic_ros run_container.py` if you catkin build this package on the hosting computer side.
 As in this example, by putting required sub-launch files inside the directory that will be mounted on, you can combine many node inside the container.
 
 ### Note:
-- On custom vocabulary: if you want to limit the detected instances by custom vocabulary, please set launch args to `vocabulary:='custom' custom_vocabulary:='bottle,shoe'`. 
+- On custom vocabulary: if you want to limit the detected instances by custom vocabulary, please set launch args to `vocabulary:='custom' custom_vocabulary:='bottle,shoe'` or call `~custom_vocabulary` service. If you want to set it to the default, please call `~default_vocabulary` service.
 - On model types: Detic is trained in different model types. In this repository you can try out all of the [real-time models](https://github.com/facebookresearch/Detic/blob/main/docs/MODEL_ZOO.md#real-time-models) using the `model_type` parameter.
 - On real-time performance: For higher recognition frequencies turn off all debug info, run on GPU, decompress topics locally, use smaller models (*e.g.* `res50`), and avoid having too many classes in the frame (by *e.g.* setting a custom vocabulary or higher confidence thresholds). The `sample_detection.launch` with default parameters handles all of this, yielding object bounding boxes at **around 10Hz**.
 
