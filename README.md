@@ -81,7 +81,27 @@ python3 run_container.py -host pr1040 -mount ./launch -name sample_detection.lau
 Or `rosrun detic_ros run_container.py` if you catkin build this package on the hosting computer side.
 As in this example, by putting required sub-launch files inside the directory that will be mounted on, you can combine many node inside the container.
 
-### Note:
+### Required Parameters for `sample_detection.launch`
+
+When launching sample_detection.launch, you must specify the following parameters:
+
+- `input_image`
+- `input_depth`
+- `input_camera_info`
+- `target_frame_id`
+
+Example Command
+```
+python3 run_container.py -host xxx.xx.xxx.xx -mount ./launch -name sample_detection.launch \
+    debug:=true \
+    input_image:=/camera/color/image_raw \
+    input_depth:=/camera/aligned_depth_to_color/image_raw \
+    input_camera_info:=/camera/aligned_depth_to_color/camera_info \
+    target_frame_id:=real_base_link
+```
+
+### Notes: 
+- The default configuration of `sample_detection.launch` is set for PR2.
 - On custom vocabulary: if you want to limit the detected instances by custom vocabulary, please set launch args to `vocabulary:='custom' custom_vocabulary:='bottle,shoe'` or call `~custom_vocabulary` service. If you want to set it to the default, please call `~default_vocabulary` service.
 - On model types: Detic is trained in different model types. In this repository you can try out all of the [real-time models](https://github.com/facebookresearch/Detic/blob/main/docs/MODEL_ZOO.md#real-time-models) using the `model_type` parameter.
 - On real-time performance: For higher recognition frequencies turn off all debug info, run on GPU, decompress topics locally, use smaller models (*e.g.* `res50`), and avoid having too many classes in the frame (by *e.g.* setting a custom vocabulary or higher confidence thresholds). The `sample_detection.launch` with default parameters handles all of this, yielding object bounding boxes at **around 10Hz**.
