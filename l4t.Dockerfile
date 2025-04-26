@@ -13,15 +13,6 @@ RUN apt update && apt install -y -qq curl &&\
     python3-catkin-tools python3-rosdep ros-noetic-desktop-full ros-noetic-jsk-recognition &&\
     rm -rf /var/lib/apt/lists/*
 
-# Upgrade pip-setup related packages to make grpcio install faster. Without this line, the grpcio would be compiled from source and it takes so much time.
-RUN pip3 install --upgrade pip 'setuptools<=68.2.2' wheel && rm -rf ~/.cache/pip
-
-# Build detectron2 from source. The aarch64 version is not released
-RUN cd /tmp &&\
-    git clone --depth 1 -b v0.6 https://github.com/facebookresearch/detectron2 &&\
-    pip3 install --no-cache-dir -e detectron2 &&\
-    rm -rf ~/.cache/pip
-
 # Copy repository and install system dependencies
 RUN rosdep init
 RUN mkdir -p /catkin_ws/src/detic_ros
@@ -34,6 +25,19 @@ RUN cd /catkin_ws/src/detic_ros &&\
 
 # Build
 COPY . /catkin_ws/src/detic_ros
-RUN sed -i '1,3d' /catkin_ws/src/detic_ros/requirements_without_torch.txt
 RUN cd /catkin_ws &&\
-    /opt/ros/noetic/env.sh catkin build detic_ros --cmake-args -DDETIC_ROS_INSTALL_TORCH=OFF
+    /opt/ros/noetic/env.sh catkin build detic_ros --cmake-args -DUSE_VIRTUALENV=OFF
+
+RUN python3 -m venv /venv --system-site-packages
+
+# Upgrade pip-setup related packages to make grpcio install faster. Without this line, the grpcio would be compiled from source and it takes so much time.
+RUN /venv/bin/pip3 install --upgrade pip 'setuptools<=68.2.2' wheel
+
+# Build detectron2 fron source because of not being released in aarch64
+RUN /venv/bin/pip3 install git+https://github.com/facebookresearch/detectron2@v0.6 --no-cache-dir &&\
+    rm -rf ~/.cache/pip
+
+RUN /venv/bin/pip3 install -r /catkin_ws/src/detic_ros/requirements_l4t.txt &&\
+    rm -rf ~/.cache/pip
+
+ENTRYPOINT ["/catkin_ws/src/detic_ros/entrypoint_l4t.sh"]
