@@ -11,6 +11,7 @@
   <arg name="input_image" default="/kinect_head/rgb/image_rect_color"/>
   <arg name="input_depth" default="/kinect_head/depth_registered/image"/>
   <arg name="input_camera_info" default="/kinect_head/depth_registered/camera_info"/>
+  <arg name="compressed" default="true"/>
   <arg name="model_type" default="res50"/>
   <arg name="vocabulary" default="lvis"/>
   <arg name="custom_vocabulary" default=""/>
@@ -18,15 +19,17 @@
   <arg name="sync_bounding_box_and_label" default="false" doc="Syncing the bounding boxes and their label topics"/>
   <arg name="debug" default="false"/>
 
-  <arg name="_input_image" default="/$(arg namespace)/decompressed_image"/>
-  <arg name="_input_depth" default="/$(arg namespace)/decompressed_depth"/>
+  <arg name="_input_image" value="/$(arg namespace)/decompressed_image" if="$(arg compressed)"/>
+  <arg name="_input_image" value="$(arg input_image)" unless="$(arg compressed)"/>
+  <arg name="_input_depth" value="/$(arg namespace)/decompressed_depth" if="$(arg compressed)"/>
+  <arg name="_input_depth" value="$(arg input_depth)" unless="$(arg compressed)"/>
   <arg name="target_frame_id" default="base_footprint" />
 
   <group ns='$(arg namespace)'>
 
     <node name="$(arg MANAGER)" pkg="nodelet" type="nodelet" args="manager"/>
 
-    <include file="$(find detic_ros)/launch/decompress_depth.launch">
+    <include file="$(find detic_ros)/launch/decompress_depth.launch" if="$(arg compressed)">
       <arg name="input_image" value="$(arg input_image)"/>
       <arg name="input_depth" value="$(arg input_depth)"/>
       <rosparam>
