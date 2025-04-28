@@ -46,6 +46,11 @@ class DeticRosNode(ConnectionBasedTransport):
         if node_config is None:
             self._node_config = NodeConfig.from_rosparam()
 
+        if torch.cuda.is_available():
+            rospy.loginfo("GPU is available")
+        else:
+            rospy.logwarn("GPU is not available")
+
         rospy.loginfo("node_config: {}".format(self._node_config))
 
         self.is_active = True
