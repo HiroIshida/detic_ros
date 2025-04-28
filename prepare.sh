@@ -1,6 +1,8 @@
 #!/usr/bin/bash
 
-ln -sf Detic/configs detic_configs
+git submodule update --init --recursive 
+
+ln -sf Detic/configs detic_configs 
 ln -sf Detic/datasets datasets
 
 cd node_script
