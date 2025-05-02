@@ -1,4 +1,3 @@
-.git
 .gitignore
 Dockerfile
-l4t.Dockerfile
+l4t/l4t.Dockerfile

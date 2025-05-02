@@ -37,7 +37,7 @@ RUN /venv/bin/pip3 install --upgrade pip 'setuptools<=68.2.2' wheel
 RUN /venv/bin/pip3 install git+https://github.com/facebookresearch/detectron2@v0.6 --no-cache-dir &&\
     rm -rf ~/.cache/pip
 
-RUN /venv/bin/pip3 install -r /catkin_ws/src/detic_ros/requirements_l4t.txt &&\
+RUN /venv/bin/pip3 install -r /catkin_ws/src/detic_ros/l4t/requirements_l4t.txt &&\
     rm -rf ~/.cache/pip
 
-ENTRYPOINT ["/catkin_ws/src/detic_ros/entrypoint_l4t.sh"]
+ENTRYPOINT ["/catkin_ws/src/detic_ros/l4t/entrypoint_l4t.sh"]
