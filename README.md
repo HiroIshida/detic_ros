@@ -32,6 +32,13 @@ git clone https://github.com/HiroIshida/detic_ros.git
 cd detic_ros
 docker build -t detic_ros .
 ```
+
+If you use Jetson, please build the docker image for l4t. You can build it with
+
+```bash
+docker build -t detic_ros-l4t -f l4t/l4t.Dockerfile .
+```
+
 ## step2: launch Detic-segmentor node
 
 Example for running node on pr1040 (**please replace `pr1040` by you robot hostname or `localhost`**):
