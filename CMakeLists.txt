@@ -1,11 +1,16 @@
 cmake_minimum_required(VERSION 3.0.2)
 project(detic_ros)
 
+option(USE_VIRTUALENV "Installing the python requirements on virtualenv when building" ON)
+
+set(_components std_msgs sensor_msgs message_generation)
+
+if(USE_VIRTUALENV)
+    list(APPEND _components catkin_virtualenv)
+endif()
+
 find_package(catkin REQUIRED COMPONENTS
-    catkin_virtualenv
-    std_msgs
-    sensor_msgs
-    message_generation
+    ${_components}
 )
 
 find_program(NVIDIA_SMI nvidia-smi)
@@ -66,10 +71,16 @@ catkin_package(
     CATKIN_DEPENDS message_runtime
 )
 
-catkin_generate_virtualenv(
-    PYTHON_INTERPRETER python3
-    CHECK_VENV FALSE
-)
+if(USE_VIRTUALENV)
+    message(STATUS "detic_ros would be built with catkin virtualenv")
+    catkin_generate_virtualenv(
+        PYTHON_INTERPRETER python3
+        CHECK_VENV FALSE
+        INPUT_REQUIREMENTS requirements.txt
+    )
+else(USE_VIRTUALENV)
+    message(STATUS "detic_ros doesn't install requirements. Please install them manually")
+endif()
 
 file(GLOB PYTHON_SCRIPTS node_script/*.py)
 catkin_install_python(
