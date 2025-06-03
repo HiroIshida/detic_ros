@@ -18,7 +18,7 @@ example of three dimensional pose recognition for cups, bottles, and bottle caps
 ``` shell
 cd <your catkin workspace>/src
 git clone git@github.com:HiroIshida/detic_ros.git
-rosdep update && rosdep install -iry .
+rosdep update --include-eol-distros && rosdep install -iry .
 cd ../
 catkin build
 ```
