@@ -84,6 +84,7 @@ RUN mkdir -p ~/detic_ws/src
 RUN sudo apt install -y wget
 RUN sudo rosdep init && rosdep update && sudo apt update
 COPY --chown=user . /home/user/detic_ws/src/detic_ros
+RUN sudo apt install ros-noetic-catkin-virtualenv -y
 RUN cd ~/detic_ws/src &&\
     source /opt/ros/noetic/setup.bash &&\
     wstool init &&\
