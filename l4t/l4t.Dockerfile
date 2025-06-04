@@ -19,7 +19,7 @@ RUN mkdir -p /catkin_ws/src/detic_ros
 COPY package.xml /catkin_ws/src/detic_ros
 RUN cd /catkin_ws/src/detic_ros &&\
     apt update &&\
-    rosdep update &&\
+    rosdep update --include-eol-distros &&\
     rosdep install --rosdistro=noetic -iqry --from-paths /catkin_ws/src &&\
     rm -rf /var/lib/apt/lists/*
 
