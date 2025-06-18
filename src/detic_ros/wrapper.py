@@ -159,7 +159,9 @@ class DeticWrapper:
     def change_vocabulary(self, vocabulary: List[str]):
         with self.predictor_lock:
             self.predictor.change_vocabulary(",".join(vocabulary))
+            self.class_names = self.predictor.metadata.get("thing_classes", None)
 
     def set_default_vocabulary(self):
         with self.predictor_lock:
             self.predictor.set_defalt_vocabulary()  # TODO: fix typo => default
+            self.class_names = self.predictor.metadata.get("thing_classes", None)
