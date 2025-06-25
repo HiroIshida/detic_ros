@@ -17,7 +17,6 @@ from centernet.config import add_centernet_config
 from detectron2.config import get_cfg
 from detic.config import add_detic_config
 
-
 @dataclass
 class NodeConfig:
     enable_pubsub: bool
@@ -32,6 +31,7 @@ class NodeConfig:
     confidence_threshold: float
     device_name: str
     num_torch_thread: Optional[int]
+    publish_current_vocabulary: bool
     output_highest: bool = True
 
     model_names = {
@@ -55,6 +55,7 @@ class NodeConfig:
             vocabulary: str = 'lvis',
             custom_vocabulary: str = '',
             num_torch_thread: Optional[int] = None,
+            publish_current_vocabulary: bool = True,
             output_highest: bool = False):
 
         if device_name == 'auto':
@@ -85,6 +86,7 @@ class NodeConfig:
             confidence_threshold,
             device_name,
             num_torch_thread,
+            publish_current_vocabulary,
             output_highest)
 
     @classmethod
@@ -102,6 +104,7 @@ class NodeConfig:
             rospy.get_param('~vocabulary', 'lvis'),
             rospy.get_param('~custom_vocabulary', ''),
             rospy.get_param('~num_torch_thread', None),
+            rospy.get_param('~publish_current_vocabulary', True),
             rospy.get_param('~output_highest', False))
 
     def to_detectron_config(self):

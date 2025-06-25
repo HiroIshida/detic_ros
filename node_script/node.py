@@ -7,6 +7,7 @@ from jsk_recognition_msgs.msg import LabelArray, VectorArray
 from jsk_topic_tools.transport import ConnectionBasedTransport
 from rospy import Publisher, Subscriber
 from sensor_msgs.msg import Image
+from std_msgs.msg import String
 from std_srvs.srv import Empty, EmptyRequest, EmptyResponse
 
 from detic_ros.msg import SegmentationInfo
@@ -85,6 +86,12 @@ class DeticRosNode(ConnectionBasedTransport):
         else:
             self.pub_debug_segmentation_image = None
 
+        if self._node_config.publish_current_vocabulary:
+            self.pub_current_vocabulary = rospy.Publisher('~current_vocabulary', String, queue_size=1, latch=True)
+            self.pub_current_vocabulary.publish(",".join(self.detic_wrapper.class_names))
+        else:
+            self.pub_current_vocabulary = None
+
     def subscribe(self):
         if self._node_config.enable_pubsub:
             # As for large buff_size please see:
@@ -160,12 +167,16 @@ class DeticRosNode(ConnectionBasedTransport):
     def custom_vocab_srv(self, req: CustomVocabularyRequest) -> CustomVocabularyResponse:
         rospy.loginfo("Change vocabulary to {}".format(req.vocabulary))
         self.detic_wrapper.change_vocabulary(req.vocabulary)
+        if self.pub_current_vocabulary:
+            self.pub_current_vocabulary.publish(",".join(self.detic_wrapper.class_names))
         res = CustomVocabularyResponse()
         return res
 
     def default_vocab_srv(self, req: EmptyRequest) -> EmptyResponse:
         rospy.loginfo("Change to default vocabulary")
         self.detic_wrapper.set_default_vocabulary()
+        if self.pub_current_vocabulary:
+            self.pub_current_vocabulary.publish(",".join(self.detic_wrapper.class_names))
         res = EmptyResponse()
         return res
 
