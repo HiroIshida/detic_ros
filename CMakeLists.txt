@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 3.0.2)
 project(detic_ros)
 
 option(USE_VIRTUALENV "Installing the python requirements on virtualenv when building" ON)
+option(DETIC_DOWNLOAD_MODELS "Download pre-trained Detic model weights during the build" ON)
 
 set(_components std_msgs sensor_msgs message_generation)
 
@@ -29,26 +30,28 @@ endif()
 
 catkin_python_setup()
 
-find_package(Wget REQUIRED)
-add_custom_target(create_models_dir
-    COMMAND ${CMAKE_COMMAND} -E make_directory "${PROJECT_SOURCE_DIR}/models"
-)
-add_custom_target(download_LCOCOI21k_CLIP_SwinB_896b32_4x_ft4x ALL
-    DEPENDS create_models_dir
-    COMMAND ${WGET_EXECUTABLE} -q "https://dl.fbaipublicfiles.com/detic/Detic_LCOCOI21k_CLIP_SwinB_896b32_4x_ft4x_max-size.pth" -O "${PROJECT_SOURCE_DIR}/models/Detic_LCOCOI21k_CLIP_SwinB_896b32_4x_ft4x_max-size.pth"
-)
-add_custom_target(download_LCOCOI21k_CLIP_CXT21k_640b32_4x_ft4x ALL
-    DEPENDS create_models_dir
-    COMMAND ${WGET_EXECUTABLE} -q "https://dl.fbaipublicfiles.com/detic/Detic_LCOCOI21k_CLIP_CXT21k_640b32_4x_ft4x_max-size.pth" -O "${PROJECT_SOURCE_DIR}/models/Detic_LCOCOI21k_CLIP_CXT21k_640b32_4x_ft4x_max-size.pth"
-)
-add_custom_target(download_LCOCOI21k_CLIP_R5021k_640b32_4x_ft4x ALL
-    DEPENDS create_models_dir
-    COMMAND ${WGET_EXECUTABLE} -q "https://dl.fbaipublicfiles.com/detic/Detic_LCOCOI21k_CLIP_R5021k_640b32_4x_ft4x_max-size.pth" -O "${PROJECT_SOURCE_DIR}/models/Detic_LCOCOI21k_CLIP_R5021k_640b32_4x_ft4x_max-size.pth"
-)
-add_custom_target(download_LCOCOI21k_CLIP_R18_640b32_4x_ft4x ALL
-    DEPENDS create_models_dir
-    COMMAND ${WGET_EXECUTABLE} -q "https://dl.fbaipublicfiles.com/detic/Detic_LCOCOI21k_CLIP_R18_640b32_4x_ft4x_max-size.pth" -O "${PROJECT_SOURCE_DIR}/models/Detic_LCOCOI21k_CLIP_R18_640b32_4x_ft4x_max-size.pth"
-)
+if(DETIC_DOWNLOAD_MODELS)
+    find_package(Wget REQUIRED)
+    add_custom_target(create_models_dir
+        COMMAND ${CMAKE_COMMAND} -E make_directory "${PROJECT_SOURCE_DIR}/models"
+    )
+    add_custom_target(download_LCOCOI21k_CLIP_SwinB_896b32_4x_ft4x ALL
+        DEPENDS create_models_dir
+        COMMAND ${WGET_EXECUTABLE} -q "https://dl.fbaipublicfiles.com/detic/Detic_LCOCOI21k_CLIP_SwinB_896b32_4x_ft4x_max-size.pth" -O "${PROJECT_SOURCE_DIR}/models/Detic_LCOCOI21k_CLIP_SwinB_896b32_4x_ft4x_max-size.pth"
+    )
+    add_custom_target(download_LCOCOI21k_CLIP_CXT21k_640b32_4x_ft4x ALL
+        DEPENDS create_models_dir
+        COMMAND ${WGET_EXECUTABLE} -q "https://dl.fbaipublicfiles.com/detic/Detic_LCOCOI21k_CLIP_CXT21k_640b32_4x_ft4x_max-size.pth" -O "${PROJECT_SOURCE_DIR}/models/Detic_LCOCOI21k_CLIP_CXT21k_640b32_4x_ft4x_max-size.pth"
+    )
+    add_custom_target(download_LCOCOI21k_CLIP_R5021k_640b32_4x_ft4x ALL
+        DEPENDS create_models_dir
+        COMMAND ${WGET_EXECUTABLE} -q "https://dl.fbaipublicfiles.com/detic/Detic_LCOCOI21k_CLIP_R5021k_640b32_4x_ft4x_max-size.pth" -O "${PROJECT_SOURCE_DIR}/models/Detic_LCOCOI21k_CLIP_R5021k_640b32_4x_ft4x_max-size.pth"
+    )
+    add_custom_target(download_LCOCOI21k_CLIP_R18_640b32_4x_ft4x ALL
+        DEPENDS create_models_dir
+        COMMAND ${WGET_EXECUTABLE} -q "https://dl.fbaipublicfiles.com/detic/Detic_LCOCOI21k_CLIP_R18_640b32_4x_ft4x_max-size.pth" -O "${PROJECT_SOURCE_DIR}/models/Detic_LCOCOI21k_CLIP_R18_640b32_4x_ft4x_max-size.pth"
+    )
+endif()
 
 add_message_files(
     FILES
