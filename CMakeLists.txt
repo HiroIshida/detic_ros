@@ -51,6 +51,10 @@ if(DETIC_DOWNLOAD_MODELS)
         DEPENDS create_models_dir
         COMMAND ${WGET_EXECUTABLE} -q "https://dl.fbaipublicfiles.com/detic/Detic_LCOCOI21k_CLIP_R18_640b32_4x_ft4x_max-size.pth" -O "${PROJECT_SOURCE_DIR}/models/Detic_LCOCOI21k_CLIP_R18_640b32_4x_ft4x_max-size.pth"
     )
+    add_custom_target(download_ViT-B-32.pt ALL
+        DEPENDS create_models_dir
+        COMMAND ${WGET_EXECUTABLE} -q "https://openaipublic.azureedge.net/clip/models/40d365715913c9da98579312b702a82c18be219cc2a73407c4526f58eba950af/ViT-B-32.pt" -O "${PROJECT_SOURCE_DIR}/models/ViT-B-32.pt"
+    )
 endif()
 
 add_message_files(

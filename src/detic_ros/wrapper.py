@@ -84,23 +84,23 @@ class DeticWrapper:
             self.custom_vocabulary = custom_vocabulary
 
     def __init__(self, node_config: NodeConfig):
+        rospack = rospkg.RosPack()
+        self.pack_path = rospack.get_path('detic_ros')
         self._adhoc_hack_metadata_path()
         detectron_cfg = node_config.to_detectron_config()
         dummy_args = self.DummyArgs(node_config.vocabulary, node_config.custom_vocabulary)
 
-        self.predictor = VisualizationDemo(detectron_cfg, dummy_args)
+        self.predictor = VisualizationDemo(detectron_cfg, dummy_args,
+                                           clip_download_root=os.path.join(self.pack_path, "models"))
         self.predictor_lock = Lock()
         self.node_config = node_config
         self.class_names = self.predictor.metadata.get("thing_classes", None)
 
-    @staticmethod
-    def _adhoc_hack_metadata_path():
+    def _adhoc_hack_metadata_path(self):
         # because original BUILDIN_CLASSIFIER is somehow position dependent
-        rospack = rospkg.RosPack()
-        pack_path = rospack.get_path('detic_ros')
         path_dict = detic.predictor.BUILDIN_CLASSIFIER
         for key in path_dict.keys():
-            path_dict[key] = os.path.join(pack_path, path_dict[key])
+            path_dict[key] = os.path.join(self.pack_path, path_dict[key])
 
     def infer(self, msg: Image) -> InferenceRawResult:
         # Segmentation image, detected classes, detection scores, visualization image
