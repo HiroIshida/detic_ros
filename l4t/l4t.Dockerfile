@@ -40,4 +40,7 @@ RUN /venv/bin/pip3 install git+https://github.com/facebookresearch/detectron2@v0
 RUN /venv/bin/pip3 install -r /catkin_ws/src/detic_ros/l4t/requirements_l4t.txt &&\
     rm -rf ~/.cache/pip
 
+# Pre-download CLIP embeddings to avoid downloading it on runtime
+RUN /venv/bin/python3 -c "import clip; clip.load('ViT-B/32', device='cpu')"
+
 ENTRYPOINT ["/catkin_ws/src/detic_ros/l4t/entrypoint_l4t.sh"]
