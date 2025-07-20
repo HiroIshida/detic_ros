@@ -1,0 +1,37 @@
+name: run rostest inside l4t docker
+
+on:
+    push:
+        branches:
+            - master
+    pull_request:
+        branches:
+            - master
+
+jobs:
+  l4t_build:
+    name: test docker build
+    runs-on: ubuntu-24.04-arm
+    steps:
+        - name: Free disk space
+          uses: jlumbroso/free-disk-space@main
+          with:
+            tool-cache: false
+            docker-images: false
+        - name: Checkout
+          uses: actions/checkout@v2
+        - name: Set up Docker Buildx
+          uses: docker/setup-buildx-action@v3
+          with:
+              driver: docker
+        - name: build
+          uses: docker/build-push-action@v5
+          with:
+              push: false
+              platform: linux/arm64
+              tags: detic_ros:latest
+              context: .
+              file: l4t/l4t.Dockerfile
+        - name: rostest
+          run: |
+              docker run --rm detic_ros:latest /bin/bash -i -c "source ~/.bashrc; rostest detic_ros test_node.test"
