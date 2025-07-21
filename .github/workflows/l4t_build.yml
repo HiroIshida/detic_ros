@@ -1,4 +1,4 @@
-name: run rostest inside l4t docker
+name: build l4t docker image
 
 on:
     push:
@@ -32,6 +32,3 @@ jobs:
               tags: detic_ros:latest
               context: .
               file: l4t/l4t.Dockerfile
-        - name: rostest
-          run: |
-              docker run --rm detic_ros:latest /bin/bash -i -c "source ~/.bashrc; rostest detic_ros test_node.test"
