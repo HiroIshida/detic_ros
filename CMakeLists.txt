@@ -32,24 +32,32 @@ catkin_python_setup()
 
 if(DETIC_DOWNLOAD_MODELS)
     find_package(Wget REQUIRED)
-    add_custom_target(create_models_dir
-        COMMAND ${CMAKE_COMMAND} -E make_directory "${PROJECT_SOURCE_DIR}/models"
+    set(MODEL_DIR "${PROJECT_SOURCE_DIR}/models")
+    file(MAKE_DIRECTORY ${MODEL_DIR})
+    set(MODEL_FILES
+        "Detic_LCOCOI21k_CLIP_SwinB_896b32_4x_ft4x_max-size.pth"
+        "Detic_LCOCOI21k_CLIP_CXT21k_640b32_4x_ft4x_max-size.pth"
+        "Detic_LCOCOI21k_CLIP_R5021k_640b32_4x_ft4x_max-size.pth"
+        "Detic_LCOCOI21k_CLIP_R18_640b32_4x_ft4x_max-size.pth"
     )
-    add_custom_target(download_LCOCOI21k_CLIP_SwinB_896b32_4x_ft4x ALL
-        DEPENDS create_models_dir
-        COMMAND ${WGET_EXECUTABLE} -q "https://dl.fbaipublicfiles.com/detic/Detic_LCOCOI21k_CLIP_SwinB_896b32_4x_ft4x_max-size.pth" -O "${PROJECT_SOURCE_DIR}/models/Detic_LCOCOI21k_CLIP_SwinB_896b32_4x_ft4x_max-size.pth"
-    )
-    add_custom_target(download_LCOCOI21k_CLIP_CXT21k_640b32_4x_ft4x ALL
-        DEPENDS create_models_dir
-        COMMAND ${WGET_EXECUTABLE} -q "https://dl.fbaipublicfiles.com/detic/Detic_LCOCOI21k_CLIP_CXT21k_640b32_4x_ft4x_max-size.pth" -O "${PROJECT_SOURCE_DIR}/models/Detic_LCOCOI21k_CLIP_CXT21k_640b32_4x_ft4x_max-size.pth"
-    )
-    add_custom_target(download_LCOCOI21k_CLIP_R5021k_640b32_4x_ft4x ALL
-        DEPENDS create_models_dir
-        COMMAND ${WGET_EXECUTABLE} -q "https://dl.fbaipublicfiles.com/detic/Detic_LCOCOI21k_CLIP_R5021k_640b32_4x_ft4x_max-size.pth" -O "${PROJECT_SOURCE_DIR}/models/Detic_LCOCOI21k_CLIP_R5021k_640b32_4x_ft4x_max-size.pth"
-    )
-    add_custom_target(download_LCOCOI21k_CLIP_R18_640b32_4x_ft4x ALL
-        DEPENDS create_models_dir
-        COMMAND ${WGET_EXECUTABLE} -q "https://dl.fbaipublicfiles.com/detic/Detic_LCOCOI21k_CLIP_R18_640b32_4x_ft4x_max-size.pth" -O "${PROJECT_SOURCE_DIR}/models/Detic_LCOCOI21k_CLIP_R18_640b32_4x_ft4x_max-size.pth"
+    set(MODEL_BASE_URL "https://dl.fbaipublicfiles.com/detic")
+    set(MODEL_OUTPUT_FILES "")
+    foreach(MODEL_FILENAME ${MODEL_FILES})
+        set(MODEL_PATH "${MODEL_DIR}/${MODEL_FILENAME}")
+        set(MODEL_URL "${MODEL_BASE_URL}/${MODEL_FILENAME}")
+
+        add_custom_command(
+            OUTPUT ${MODEL_PATH}
+            COMMAND ${WGET_EXECUTABLE} -q -N -P "${MODEL_DIR}" "${MODEL_URL}"
+            COMMENT "Downloading Detic model: ${MODEL_FILENAME}..."
+            VERBATIM
+        )
+        list(APPEND MODEL_OUTPUT_FILES ${MODEL_PATH})
+    endforeach()
+
+    add_custom_target(download_detic_models ALL
+        DEPENDS ${MODEL_OUTPUT_FILES}
+        COMMENT "Ensuring Detic models are downloaded."
     )
 endif()
 
