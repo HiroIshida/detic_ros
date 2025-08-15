@@ -39,3 +39,6 @@ jobs:
         - name: rostest
           run: |
               docker run --rm detic_ros:latest /bin/bash -i -c "source ~/.bashrc; rostest detic_ros test_node.test"
+        - name: test main python scirpt
+          run: |
+              bash .github/workflows/check_container_running.sh
