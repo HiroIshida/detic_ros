@@ -61,7 +61,7 @@ if __name__ == "__main__":
                 /bin/bash -i -c \
                 "source ~/.bashrc; \
                 roscd detic_ros; \
-                rossetip; rossetmaster {host}; \
+                rossetmaster {host}; rossetip; \
                 roslaunch detic_ros {launch_file_name} {launch_args}"
                 """.format(
             tmp_launch_path=tmp_launch_path,
