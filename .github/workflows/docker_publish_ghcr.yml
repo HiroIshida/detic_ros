@@ -10,6 +10,17 @@ jobs:
   publish:
     runs-on: ubuntu-latest
 
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: amd64
+            platform: linux/amd64
+            dockerfile: Dockerfile
+          - arch: arm64
+            platform: linux/arm64
+            dockerfile: l4t/l4t.Dockerfile
+
     permissions:
       contents: read
       packages: write
@@ -41,13 +52,47 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: .
+          file: ${{ matrix.dockerfile }}
           push: true
-          platforms: linux/amd64
+          platforms: ${{ matrix.platform }}
           tags: |
-            ghcr.io/hiroishida/detic_ros:latest
-            ghcr.io/hiroishida/detic_ros:${{ github.sha }}
+            ghcr.io/hiroishida/detic_ros:latest-${{ matrix.arch }}
+            ghcr.io/hiroishida/detic_ros:${{ github.sha }}-${{ matrix.arch }}
           build-args: |
             INSTALL_JSK_PCL=true
             KEEP_LAUNCH_FILES=true
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          cache-from: type=gha,scope=${{ matrix.arch }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.arch }}
+
+  manifest:
+    needs: publish
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Create & push multi-arch manifest (latest)
+        run: |
+          docker buildx imagetools create \
+            -t ghcr.io/hiroishida/detic_ros:latest \
+            ghcr.io/hiroishida/detic_ros:latest-amd64 \
+            ghcr.io/hiroishida/detic_ros:latest-arm64
+
+      - name: Create & push multi-arch manifest (sha)
+        run: |
+          docker buildx imagetools create \
+            -t ghcr.io/hiroishida/detic_ros:${{ github.sha }} \
+            ghcr.io/hiroishida/detic_ros:${{ github.sha }}-amd64 \
+            ghcr.io/hiroishida/detic_ros:${{ github.sha }}-arm64
