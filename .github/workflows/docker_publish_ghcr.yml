@@ -8,18 +8,20 @@ on:
 
 jobs:
   publish:
-    runs-on: ubuntu-latest
-
     strategy:
       fail-fast: false
       matrix:
         include:
           - arch: amd64
+            runner: ubuntu-latest
             platform: linux/amd64
             dockerfile: Dockerfile
           - arch: arm64
+            runner: ubuntu-24.04-arm
             platform: linux/arm64
             dockerfile: l4t/l4t.Dockerfile
+
+    runs-on: {{ matrix.runner }}
 
     permissions:
       contents: read
