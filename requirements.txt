@@ -20,3 +20,6 @@ numpy==1.22.0
 lvis==0.5.3
 nltk==3.6.7
 git+https://github.com/openai/CLIP.git
+
+# For jit compilation
+protobuf<3.21  # see https://protobuf.dev/news/2022-05-06/#python-updates
